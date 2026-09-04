@@ -39,7 +39,13 @@ const devPortOrigins = Array.from(
   { length: 10 },
   (_, i) => `http://localhost:${5173 + i}`
 );
-const allowedOrigins = [process.env.CLIENT_URL, ...devPortOrigins].filter(Boolean);
+// CLIENT_URL may hold a single origin or a comma-separated list (e.g. the
+// apex domain, its www subdomain, and the Vercel preview URL all at once).
+const clientOrigins = (process.env.CLIENT_URL || "")
+  .split(",")
+  .map((url) => url.trim())
+  .filter(Boolean);
+const allowedOrigins = [...clientOrigins, ...devPortOrigins];
 
 app.use(
   cors({
