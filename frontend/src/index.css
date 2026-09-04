@@ -1,0 +1,69 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  @apply bg-white text-ink-900 antialiased;
+  font-family: "Inter", system-ui, sans-serif;
+}
+
+h1, h2, h3, .font-display {
+  font-family: "Playfair Display", serif;
+}
+
+::selection {
+  background-color: #b6dee6;
+  color: #0c434d;
+}
+
+/* Custom scrollbar - subtle, on-brand */
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+::-webkit-scrollbar-track {
+  background: #f3fafb;
+}
+::-webkit-scrollbar-thumb {
+  background: #b6dee6;
+  border-radius: 999px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #86c7d4;
+}
+
+.container-app {
+  @apply mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8;
+}
+
+.btn {
+  @apply inline-flex items-center justify-center gap-2 rounded-full px-6 py-3 text-sm font-medium transition-all duration-300 ease-out;
+}
+.btn-primary {
+  @apply btn bg-brand-600 text-white shadow-soft hover:bg-brand-700 active:scale-[0.98];
+}
+.btn-outline {
+  @apply btn border border-brand-600 text-brand-700 hover:bg-brand-50 active:scale-[0.98];
+}
+.btn-ghost {
+  @apply btn text-ink-700 hover:bg-brand-50;
+}
+
+.input-field {
+  @apply w-full rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm text-ink-900 placeholder:text-ink-500/60 outline-none transition focus:border-brand-500 focus:ring-2 focus:ring-brand-100;
+}
+
+.skeleton {
+  @apply animate-pulse bg-brand-50;
+}
+
+.line-clamp-2 {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
