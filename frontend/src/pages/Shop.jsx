@@ -5,6 +5,7 @@ import { SlidersHorizontal, X } from "lucide-react";
 import ProductGrid from "../components/ProductGrid.jsx";
 import Breadcrumbs from "../components/Breadcrumbs.jsx";
 import { fetchProducts, fetchCategories } from "../services/productService.js";
+import useSeo from "../hooks/useSeo.js";
 
 const sortOptions = [
   { value: "featured", label: "Featured" },
@@ -28,9 +29,12 @@ export default function Shop() {
   const maxPrice = searchParams.get("maxPrice") || "";
   const sort = searchParams.get("sort") || "featured";
 
-  useEffect(() => {
-    document.title = "Shop All Products | GADCO ZEN";
-  }, []);
+  useSeo({
+    title: "Shop Skincare, Hair Care & Body Care",
+    description:
+      "Shop all GADCO ZEN products — foaming face washes, SPF 50 sunscreens, hair growth shampoo, hair mask and body lotion. Free shipping above ₹999.",
+    noindex: Boolean(search),
+  });
 
   useEffect(() => {
     fetchCategories().then((data) => setCategories(data.categories));

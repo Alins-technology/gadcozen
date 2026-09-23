@@ -8,6 +8,7 @@ import { useWishlist } from "../context/WishlistContext.jsx";
 import { useToast } from "../context/ToastContext.jsx";
 import RatingStars from "./RatingStars.jsx";
 import QuickViewModal from "./QuickViewModal.jsx";
+import { imgProps } from "../utils/image.js";
 
 export default function ProductCard({ product, index = 0 }) {
   const { addItem } = useCart();
@@ -79,7 +80,7 @@ export default function ProductCard({ product, index = 0 }) {
               <Eye size={13} /> Quick View
             </button>
             <img
-              src={product.images?.[0]}
+              {...imgProps(product.images?.[0], 600)}
               alt={product.name}
               loading="lazy"
               className="h-full w-full object-cover transition-transform duration-500 ease-out group-hover:scale-[1.06]"

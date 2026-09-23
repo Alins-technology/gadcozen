@@ -1,20 +1,19 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Link } from "react-router-dom";
 import { Mail } from "lucide-react";
 import { forgotPassword } from "../services/authService.js";
 import { getErrorMessage } from "../services/api.js";
 import Logo from "../components/Logo.jsx";
+import useSeo from "../hooks/useSeo.js";
 
 export default function ForgotPassword() {
+  useSeo({ title: "Forgot Password", noindex: true });
   const [email, setEmail] = useState("");
   const [loading, setLoading] = useState(false);
   const [sent, setSent] = useState(false);
   const [devToken, setDevToken] = useState(null);
   const [error, setError] = useState("");
 
-  useEffect(() => {
-    document.title = "Forgot Password | GADCO ZEN";
-  }, []);
 
   const handleSubmit = async (e) => {
     e.preventDefault();

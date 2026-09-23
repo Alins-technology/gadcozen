@@ -6,6 +6,7 @@ import { useToast } from "../context/ToastContext.jsx";
 import { formatPrice } from "../utils/format.js";
 import QuantitySelector from "./QuantitySelector.jsx";
 import EmptyState from "./EmptyState.jsx";
+import { imgProps } from "../utils/image.js";
 
 export default function CartDrawer({ open, onClose }) {
   const { cart, updateItem, removeItem } = useCart();
@@ -63,7 +64,7 @@ export default function CartDrawer({ open, onClose }) {
                   {items.map((item) => (
                     <li key={item.product._id} className="flex gap-3">
                       <img
-                        src={item.product.images?.[0]}
+                        {...imgProps(item.product.images?.[0], 200)}
                         alt={item.product.name}
                         className="h-20 w-20 flex-shrink-0 rounded-xl object-cover"
                       />

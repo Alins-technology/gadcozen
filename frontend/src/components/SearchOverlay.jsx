@@ -4,6 +4,7 @@ import { AnimatePresence, motion } from "framer-motion";
 import { Search, X, PackageSearch } from "lucide-react";
 import { fetchProducts } from "../services/productService.js";
 import { formatPrice } from "../utils/format.js";
+import { imgProps } from "../utils/image.js";
 
 export default function SearchOverlay({ open, onClose }) {
   const [query, setQuery] = useState("");
@@ -93,7 +94,7 @@ export default function SearchOverlay({ open, onClose }) {
                     className="flex w-full items-center gap-3 rounded-xl p-2 text-left transition hover:bg-brand-50"
                   >
                     <img
-                      src={p.images?.[0]}
+                      {...imgProps(p.images?.[0], 200)}
                       alt={p.name}
                       className="h-14 w-14 flex-shrink-0 rounded-lg object-cover"
                     />

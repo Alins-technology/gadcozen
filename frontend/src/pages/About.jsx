@@ -1,12 +1,15 @@
-import { useEffect } from "react";
 import { motion } from "framer-motion";
 import Breadcrumbs from "../components/Breadcrumbs.jsx";
 import SectionHeading from "../components/SectionHeading.jsx";
+import { imgProps } from "../utils/image.js";
+import useSeo from "../hooks/useSeo.js";
 
 export default function About() {
-  useEffect(() => {
-    document.title = "About Us | GADCO ZEN";
-  }, []);
+  useSeo({
+    title: "About Us",
+    description:
+      "Meet GADCO ZEN — simple, effective skincare and personal care made for everyday routines.",
+  });
 
   return (
     <div>
@@ -39,7 +42,7 @@ export default function About() {
           className="overflow-hidden rounded-3xl bg-brand-50"
         >
           <img
-            src="/images/products/hair-growth-shampoo/hair-growth-shampoo.png"
+            {...imgProps("/images/products/hair-growth-shampoo/hair-growth-shampoo.png", 1200)}
             alt="GADCO ZEN Hair Growth Shampoo"
             className="mx-auto h-80 w-auto object-contain p-8"
           />

@@ -4,6 +4,7 @@ import cors from "cors";
 import cookieParser from "cookie-parser";
 import morgan from "morgan";
 import helmet from "helmet";
+import compression from "compression";
 import rateLimit from "express-rate-limit";
 import path from "path";
 import { fileURLToPath } from "url";
@@ -89,6 +90,7 @@ app.post(
   razorpayWebhook
 );
 
+app.use(compression());
 app.use(express.json({ limit: "1mb" }));
 app.use(express.urlencoded({ extended: true, limit: "1mb" }));
 app.use(cookieParser());
@@ -112,6 +114,16 @@ app.use(["/api/contact", "/api/subscribers"], limiter(10));
 app.get("/api/health", (req, res) => {
   res.json({ status: "ok", brand: "GADCO ZEN", time: new Date().toISOString() });
 });
+
+// Short browser/CDN caching for public catalogue reads — cuts repeat API
+// calls while browsing. Anything user-specific (cart, orders...) is untouched.
+const publicCache = (seconds) => (req, res, next) => {
+  if (req.method === "GET" && !req.headers.authorization) {
+    res.set("Cache-Control", `public, max-age=${seconds}, stale-while-revalidate=${seconds * 5}`);
+  }
+  next();
+};
+app.use(["/api/products", "/api/categories", "/api/reviews/featured", "/api/config"], publicCache(60));
 
 app.use("/api/config", configRoutes);
 app.use("/api/auth", authRoutes);

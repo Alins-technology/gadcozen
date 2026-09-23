@@ -1,12 +1,10 @@
-import { useEffect } from "react";
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import { Compass } from "lucide-react";
+import useSeo from "../hooks/useSeo.js";
 
 export default function NotFound() {
-  useEffect(() => {
-    document.title = "Page Not Found | GADCO ZEN";
-  }, []);
+  useSeo({ title: "Page Not Found", noindex: true });
 
   return (
     <div className="container-app flex min-h-[70vh] flex-col items-center justify-center text-center">

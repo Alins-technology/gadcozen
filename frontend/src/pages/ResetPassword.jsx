@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
 import { Lock } from "lucide-react";
 import { resetPassword } from "../services/authService.js";
@@ -6,8 +6,10 @@ import { getErrorMessage } from "../services/api.js";
 import { useAuth } from "../context/AuthContext.jsx";
 import { useToast } from "../context/ToastContext.jsx";
 import Logo from "../components/Logo.jsx";
+import useSeo from "../hooks/useSeo.js";
 
 export default function ResetPassword() {
+  useSeo({ title: "Reset Password", noindex: true });
   const { token } = useParams();
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
@@ -16,9 +18,6 @@ export default function ResetPassword() {
   const { showToast } = useToast();
   const navigate = useNavigate();
 
-  useEffect(() => {
-    document.title = "Reset Password | GADCO ZEN";
-  }, []);
 
   const handleSubmit = async (e) => {
     e.preventDefault();

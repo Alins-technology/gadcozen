@@ -6,6 +6,7 @@ import { paymentMethodLabel, paymentStatusLabel } from "../../utils/orderLabels.
 import { getErrorMessage } from "../../services/api.js";
 import { useToast } from "../../context/ToastContext.jsx";
 import PageLoader from "../../components/PageLoader.jsx";
+import { imgProps } from "../../utils/image.js";
 
 const statuses = ["Pending", "Confirmed", "Processing", "Shipped", "Delivered", "Cancelled"];
 
@@ -100,7 +101,7 @@ export default function AdminOrderDetail() {
           <div className="mt-3 divide-y divide-brand-50">
             {order.items.map((item) => (
               <div key={item.product} className="flex items-center gap-3 py-3">
-                {item.image && <img src={item.image} alt={item.name} className="h-12 w-12 rounded-lg object-cover" />}
+                {item.image && <img {...imgProps(item.image, 200)} alt={item.name} className="h-12 w-12 rounded-lg object-cover" />}
                 <div className="flex-1">
                   <p className="text-sm font-medium text-ink-900">{item.name}</p>
                   <p className="text-xs text-ink-500">Qty {item.quantity} × {formatPrice(item.price)}</p>

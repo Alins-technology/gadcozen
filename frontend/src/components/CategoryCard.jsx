@@ -1,5 +1,6 @@
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
+import { imgProps } from "../utils/image.js";
 
 export default function CategoryCard({ category, index = 0 }) {
   return (
@@ -13,7 +14,8 @@ export default function CategoryCard({ category, index = 0 }) {
         <div className="aspect-square overflow-hidden rounded-2xl border border-slate-100 bg-brand-50/70 shadow-sm transition-shadow duration-300 group-hover:shadow-card">
           {category.image ? (
             <img
-              src={category.image}
+              {...imgProps(category.image, 600)}
+              loading="lazy"
               alt={category.name}
               className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
             />

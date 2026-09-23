@@ -6,6 +6,7 @@ import { fetchAllProductsAdmin, deleteProductAdmin } from "../../services/produc
 import { formatPrice } from "../../utils/format.js";
 import { useToast } from "../../context/ToastContext.jsx";
 import PageLoader from "../../components/PageLoader.jsx";
+import { imgProps } from "../../utils/image.js";
 
 export default function AdminProducts() {
   const [products, setProducts] = useState([]);
@@ -77,7 +78,7 @@ export default function AdminProducts() {
             {filtered.map((p) => (
               <tr key={p._id} className="border-b border-brand-50 last:border-0">
                 <td className="flex items-center gap-3 p-3">
-                  <img src={p.images?.[0]} alt={p.name} className="h-10 w-10 rounded-lg object-cover" />
+                  <img {...imgProps(p.images?.[0], 200)} alt={p.name} className="h-10 w-10 rounded-lg object-cover" />
                   <span className="font-medium text-ink-900">{p.name}</span>
                 </td>
                 <td className="p-3 text-ink-700">{p.category?.name}</td>

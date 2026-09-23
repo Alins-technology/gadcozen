@@ -1,11 +1,9 @@
-import { useEffect } from "react";
 import Breadcrumbs from "./Breadcrumbs.jsx";
 import siteConfig from "../config/siteConfig.js";
+import useSeo from "../hooks/useSeo.js";
 
 export default function LegalLayout({ title, updated = siteConfig.policies.lastUpdated, children }) {
-  useEffect(() => {
-    document.title = `${title} | GADCO ZEN`;
-  }, [title]);
+  useSeo({ title, description: `${title} of ${siteConfig.brandName}.` });
 
   return (
     <div>

@@ -1,4 +1,3 @@
-import { useEffect } from "react";
 import { NavLink, Routes, Route, useNavigate } from "react-router-dom";
 import { User, Package, MapPin, Lock, LogOut, Heart } from "lucide-react";
 import Breadcrumbs from "../../components/Breadcrumbs.jsx";
@@ -8,6 +7,7 @@ import Orders from "./Orders.jsx";
 import OrderDetail from "./OrderDetail.jsx";
 import Addresses from "./Addresses.jsx";
 import Security from "./Security.jsx";
+import useSeo from "../../hooks/useSeo.js";
 
 const tabs = [
   { to: "/account", label: "Profile", icon: User, end: true },
@@ -18,12 +18,10 @@ const tabs = [
 ];
 
 export default function Account() {
+  useSeo({ title: "My Account", noindex: true });
   const { user, logout } = useAuth();
   const navigate = useNavigate();
 
-  useEffect(() => {
-    document.title = "My Account | GADCO ZEN";
-  }, []);
 
   const handleLogout = () => {
     logout();

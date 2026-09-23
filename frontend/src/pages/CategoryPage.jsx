@@ -5,6 +5,8 @@ import ProductGrid from "../components/ProductGrid.jsx";
 import { fetchCategoryBySlug, fetchProducts } from "../services/productService.js";
 import EmptyState from "../components/EmptyState.jsx";
 import { PackageSearch } from "lucide-react";
+import useSeo from "../hooks/useSeo.js";
+import { imageUrl } from "../utils/image.js";
 
 const sortOptions = [
   { value: "featured", label: "Featured" },
@@ -23,6 +25,15 @@ export default function CategoryPage() {
   const [notFound, setNotFound] = useState(false);
   const sort = searchParams.get("sort") || "featured";
 
+  useSeo({
+    title: category ? `${category.name} — Shop Online` : undefined,
+    description: category
+      ? `${category.description} Shop GADCO ZEN ${category.name.toLowerCase()} online with free shipping above ₹999.`
+      : undefined,
+    image: category?.image ? imageUrl(category.image, 1200) : undefined,
+    noindex: notFound,
+  });
+
   const load = useCallback(async () => {
     setLoading(true);
     setNotFound(false);
@@ -33,7 +44,6 @@ export default function CategoryPage() {
       ]);
       setCategory(catRes.category);
       setProducts(prodRes.products);
-      document.title = `${catRes.category.name} | GADCO ZEN`;
     } catch {
       setNotFound(true);
     } finally {

@@ -18,7 +18,10 @@ import { useToast } from "../context/ToastContext.jsx";
 import { getErrorMessage } from "../services/api.js";
 import { useStoreConfig } from "../context/StoreConfigContext.jsx";
 import siteConfig from "../config/siteConfig.js";
+import useSeo, { siteUrl, absolute } from "../hooks/useSeo.js";
+import { imageUrl } from "../utils/image.js";
 import { PackageSearch } from "lucide-react";
+import { imgProps } from "../utils/image.js";
 
 const tabs = ["Description", "Ingredients / Info", "How to Use", "Shipping & Returns", "Reviews"];
 
@@ -42,6 +45,8 @@ export default function ProductDetail() {
   const { freeShippingThreshold } = useStoreConfig();
   const navigate = useNavigate();
 
+  useSeo(buildProductSeo(product, notFound));
+
   const load = useCallback(async () => {
     setLoading(true);
     setNotFound(false);
@@ -50,7 +55,6 @@ export default function ProductDetail() {
       setProduct(product);
       setActiveImage(0);
       setQty(1);
-      document.title = `${product.name} | GADCO ZEN`;
       const [relatedRes, reviewsRes] = await Promise.all([
         fetchRelatedProducts(slug),
         fetchProductReviews(product._id),
@@ -151,7 +155,8 @@ export default function ProductDetail() {
             className="aspect-square overflow-hidden rounded-3xl bg-brand-50"
           >
             <img
-              src={product.images?.[activeImage]}
+              {...imgProps(product.images?.[activeImage], 1200)}
+              fetchpriority="high"
               alt={product.name}
               className="h-full w-full object-cover"
             />
@@ -166,7 +171,7 @@ export default function ProductDetail() {
                     activeImage === i ? "border-brand-600" : "border-transparent"
                   }`}
                 >
-                  <img src={img} alt="" className="h-full w-full object-cover" />
+                  <img {...imgProps(img, 200)} alt="" className="h-full w-full object-cover" />
                 </button>
               ))}
             </div>
@@ -404,4 +409,72 @@ export default function ProductDetail() {
       )}
     </div>
   );
+}
+
+// Title/description/Open Graph plus Product + Breadcrumb structured data, so
+// Google can show price, stock and rating right in search results.
+function buildProductSeo(product, notFound) {
+  if (notFound) return { title: "Product Not Found", noindex: true };
+  if (!product) return {};
+
+  const url = `${siteUrl()}/product/${product.slug}`;
+  const images = (product.images || []).map((img) => absolute(imageUrl(img, 1200)));
+  const description = product.shortDescription || product.description;
+
+  const productLd = {
+    "@context": "https://schema.org",
+    "@type": "Product",
+    name: product.name,
+    description,
+    image: images,
+    sku: product.sku,
+    brand: { "@type": "Brand", name: product.brand || siteConfig.brandName },
+    category: product.category?.name,
+    offers: {
+      "@type": "Offer",
+      url,
+      priceCurrency: "INR",
+      price: product.price,
+      availability:
+        product.stock > 0 ? "https://schema.org/InStock" : "https://schema.org/OutOfStock",
+      itemCondition: "https://schema.org/NewCondition",
+      seller: { "@type": "Organization", name: siteConfig.brandName },
+      hasMerchantReturnPolicy: {
+        "@type": "MerchantReturnPolicy",
+        applicableCountry: "IN",
+        returnPolicyCategory: "https://schema.org/MerchantReturnFiniteReturnWindow",
+        merchantReturnDays: siteConfig.policies.returnWindowDays,
+      },
+    },
+  };
+  if (product.reviewCount > 0) {
+    productLd.aggregateRating = {
+      "@type": "AggregateRating",
+      ratingValue: product.rating,
+      reviewCount: product.reviewCount,
+    };
+  }
+
+  const breadcrumbLd = {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    itemListElement: [
+      { "@type": "ListItem", position: 1, name: "Home", item: `${siteUrl()}/` },
+      product.category && {
+        "@type": "ListItem",
+        position: 2,
+        name: product.category.name,
+        item: `${siteUrl()}/category/${product.category.slug}`,
+      },
+      { "@type": "ListItem", position: product.category ? 3 : 2, name: product.name, item: url },
+    ].filter(Boolean),
+  };
+
+  return {
+    title: `${product.name} (${product.quantity})`,
+    description,
+    image: imageUrl(product.images?.[0], 1200),
+    type: "product",
+    jsonLd: [productLd, breadcrumbLd],
+  };
 }

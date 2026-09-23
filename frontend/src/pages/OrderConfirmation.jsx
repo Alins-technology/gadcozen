@@ -8,15 +8,17 @@ import { paymentMethodLabel, paymentStatusLabel } from "../utils/orderLabels.js"
 import PageLoader from "../components/PageLoader.jsx";
 import EmptyState from "../components/EmptyState.jsx";
 import { PackageSearch } from "lucide-react";
+import { imgProps } from "../utils/image.js";
+import useSeo from "../hooks/useSeo.js";
 
 export default function OrderConfirmation() {
+  useSeo({ title: "Order Confirmed", noindex: true });
   const { orderNumber } = useParams();
   const [order, setOrder] = useState(null);
   const [loading, setLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
 
   useEffect(() => {
-    document.title = "Order Confirmed | GADCO ZEN";
     fetchMyOrderByNumber(orderNumber)
       .then((data) => setOrder(data.order))
       .catch(() => setNotFound(true))
@@ -62,7 +64,7 @@ export default function OrderConfirmation() {
           {order.items.map((item) => (
             <div key={item.product} className="flex items-center gap-3 p-4">
               {item.image && (
-                <img src={item.image} alt={item.name} className="h-14 w-14 rounded-lg object-cover" />
+                <img {...imgProps(item.image, 200)} alt={item.name} className="h-14 w-14 rounded-lg object-cover" />
               )}
               <div className="flex-1">
                 <p className="text-sm font-medium text-ink-900">{item.name}</p>

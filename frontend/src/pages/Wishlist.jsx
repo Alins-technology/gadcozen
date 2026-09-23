@@ -1,18 +1,16 @@
-import { useEffect } from "react";
 import { Heart } from "lucide-react";
 import Breadcrumbs from "../components/Breadcrumbs.jsx";
 import ProductGrid from "../components/ProductGrid.jsx";
 import EmptyState from "../components/EmptyState.jsx";
 import { useWishlist } from "../context/WishlistContext.jsx";
 import { useAuth } from "../context/AuthContext.jsx";
+import useSeo from "../hooks/useSeo.js";
 
 export default function Wishlist() {
+  useSeo({ title: "Wishlist", noindex: true });
   const { products, loading } = useWishlist();
   const { isAuthenticated } = useAuth();
 
-  useEffect(() => {
-    document.title = "Wishlist | GADCO ZEN";
-  }, []);
 
   return (
     <div className="container-app py-10">

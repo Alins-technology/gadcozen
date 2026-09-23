@@ -1,7 +1,8 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { ChevronDown } from "lucide-react";
 import Breadcrumbs from "../components/Breadcrumbs.jsx";
+import useSeo from "../hooks/useSeo.js";
 
 const faqData = [
   {
@@ -103,9 +104,22 @@ function AccordionItem({ q, a }) {
 }
 
 export default function FAQ() {
-  useEffect(() => {
-    document.title = "FAQs | GADCO ZEN";
-  }, []);
+  useSeo({
+    title: "FAQs",
+    description:
+      "Answers to common questions about GADCO ZEN orders, shipping, returns, payments and products.",
+    jsonLd: {
+      "@context": "https://schema.org",
+      "@type": "FAQPage",
+      mainEntity: faqData.flatMap((group) =>
+        group.items.map((item) => ({
+          "@type": "Question",
+          name: item.q,
+          acceptedAnswer: { "@type": "Answer", text: item.a },
+        }))
+      ),
+    },
+  });
 
   return (
     <div className="container-app py-10">

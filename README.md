@@ -197,6 +197,16 @@ Two ways:
 - New images uploaded through the admin panel are stored in `backend/uploads/` and referenced by
   URL in the product's `images` array — no filesystem changes needed.
 
+**Image optimisation:** the original PNGs are ~2 MB each. The site actually serves WebP copies
+(`-200`, `-600`, `-1200` px, 30–100 KB each) created by `frontend/scripts/optimize-images.mjs`.
+After adding or replacing a photo in `public/images/products/`, run:
+
+```bash
+cd frontend && npm install --no-save sharp && npm run optimize-images
+```
+
+If a WebP copy is missing, the site falls back to the original PNG, so nothing breaks — it's just slower.
+
 ## 14. How to Change Brand Colors
 
 Edit the `brand` color scale in `frontend/tailwind.config.js`. The primary brand color
@@ -249,6 +259,11 @@ rebuild.
    otherwise admin-uploaded images disappear on every redeploy.
 5. **Security** — `NODE_ENV=production`, a fresh 32+ character `JWT_SECRET`, change the seeded
    admin password, and set `CLIENT_URL` to the real domain(s).
-6. **Seeding** — `npm run seed` refuses to run when `NODE_ENV=production` (it would delete real
+6. **SEO** — set `VITE_SITE_URL` (e.g. `https://gadcozen.com`) in Vercel. It's used for canonical
+   URLs, social previews and `sitemap.xml` (generated on every build from the live API). After
+   going live, submit `https://<domain>/sitemap.xml` in Google Search Console.
+7. **Speed** — free Render/Railway backends sleep when idle, so the first visit after a while can
+   take 30–50 s. Use a paid instance, or ping `/api/health` every 10 minutes (e.g. UptimeRobot).
+8. **Seeding** — `npm run seed` refuses to run when `NODE_ENV=production` (it would delete real
    reviews and re-create products). Seed once on an empty database with `--force`, then manage
    everything from the admin panel.

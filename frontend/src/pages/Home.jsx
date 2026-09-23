@@ -8,6 +8,8 @@ import CategoryCard from "../components/CategoryCard.jsx";
 import RatingStars from "../components/RatingStars.jsx";
 import { fetchProducts, fetchCategories } from "../services/productService.js";
 import { fetchFeaturedReviews } from "../services/reviewService.js";
+import { imgProps } from "../utils/image.js";
+import useSeo, { siteUrl } from "../hooks/useSeo.js";
 
 const trustItems = [
   { icon: Sparkles, title: "Quality Focused", description: "Everyday formulas made with care." },
@@ -17,6 +19,19 @@ const trustItems = [
 ];
 
 export default function Home() {
+  useSeo({
+    jsonLd: {
+      "@context": "https://schema.org",
+      "@type": "WebSite",
+      name: "GADCO ZEN",
+      url: siteUrl(),
+      potentialAction: {
+        "@type": "SearchAction",
+        target: `${siteUrl()}/shop?search={search_term_string}`,
+        "query-input": "required name=search_term_string",
+      },
+    },
+  });
   const [featured, setFeatured] = useState([]);
   const [bestsellers, setBestsellers] = useState([]);
   const [categories, setCategories] = useState([]);
@@ -24,7 +39,6 @@ export default function Home() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    document.title = "GADCO ZEN | Skincare That Feels As Good As It Looks";
     const load = async () => {
       setLoading(true);
       try {
@@ -94,7 +108,7 @@ export default function Home() {
             {/* second product — clearly peeking out at the top-right corner */}
             <div className="absolute -right-7 -top-7 z-10 w-[58%] rotate-[16deg] overflow-hidden rounded-[1.5rem] border-4 border-white shadow-card sm:-right-9 sm:-top-9">
               <img
-                src="/images/products/hair-growth-shampoo/hair-growth-shampoo.png"
+                {...imgProps("/images/products/hair-growth-shampoo/hair-growth-shampoo.png", 600)}
                 alt="GADCO ZEN Hair Growth Shampoo"
                 className="aspect-square w-full object-cover"
               />
@@ -107,7 +121,8 @@ export default function Home() {
               className="absolute inset-0 z-20 -translate-x-4 translate-y-3 overflow-hidden rounded-[2rem] border-4 border-white shadow-card"
             >
               <img
-                src="/images/products/fusion-sunscreen/fusion-sunscreen.png"
+                {...imgProps("/images/products/fusion-sunscreen/fusion-sunscreen.png", 600)}
+                fetchpriority="high"
                 alt="GADCO ZEN Fusion Sunscreen"
                 className="aspect-square w-full object-cover"
               />
@@ -230,7 +245,8 @@ export default function Home() {
           className="overflow-hidden rounded-3xl bg-brand-50"
         >
           <img
-            src="/images/products/body-moisturizing-lotion/body-moisturizing-lotion.png"
+            {...imgProps("/images/products/body-moisturizing-lotion/body-moisturizing-lotion.png", 1200)}
+            loading="lazy"
             alt="GADCO ZEN Body Moisturizing Lotion"
             className="mx-auto h-80 w-auto object-contain p-8"
           />

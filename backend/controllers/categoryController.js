@@ -5,13 +5,19 @@ import slugify from "slugify";
 
 // @route GET /api/categories
 export const getCategories = asyncHandler(async (req, res) => {
-  const categories = await Category.find({ isActive: true }).sort({ name: 1 });
-  const withCounts = await Promise.all(
-    categories.map(async (cat) => {
-      const productCount = await Product.countDocuments({ category: cat._id, isActive: true });
-      return { ...cat.toObject(), productCount };
-    })
-  );
+  // One aggregate for all counts instead of one query per category.
+  const [categories, counts] = await Promise.all([
+    Category.find({ isActive: true }).sort({ name: 1 }).lean(),
+    Product.aggregate([
+      { $match: { isActive: true } },
+      { $group: { _id: "$category", count: { $sum: 1 } } },
+    ]),
+  ]);
+  const countById = new Map(counts.map((c) => [String(c._id), c.count]));
+  const withCounts = categories.map((cat) => ({
+    ...cat,
+    productCount: countById.get(String(cat._id)) || 0,
+  }));
   res.json({ categories: withCounts });
 });
 

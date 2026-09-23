@@ -6,6 +6,7 @@ import { paymentMethodLabel, paymentStatusLabel } from "../../utils/orderLabels.
 import PageLoader from "../../components/PageLoader.jsx";
 import EmptyState from "../../components/EmptyState.jsx";
 import { PackageSearch } from "lucide-react";
+import { imgProps } from "../../utils/image.js";
 
 const statusSteps = ["Pending", "Confirmed", "Processing", "Shipped", "Delivered"];
 
@@ -110,7 +111,7 @@ export default function OrderDetail() {
       <div className="mt-6 divide-y divide-slate-100 rounded-xl border border-slate-100">
         {order.items.map((item) => (
           <div key={item.product} className="flex items-center gap-3 p-4">
-            {item.image && <img src={item.image} alt={item.name} className="h-14 w-14 rounded-lg object-cover" />}
+            {item.image && <img {...imgProps(item.image, 200)} alt={item.name} className="h-14 w-14 rounded-lg object-cover" />}
             <div className="flex-1">
               <p className="text-sm font-medium text-ink-900">{item.name}</p>
               <p className="text-xs text-ink-500">Qty {item.quantity}</p>

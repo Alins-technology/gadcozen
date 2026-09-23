@@ -9,8 +9,11 @@ import { useCart } from "../context/CartContext.jsx";
 import { useAuth } from "../context/AuthContext.jsx";
 import { useToast } from "../context/ToastContext.jsx";
 import { formatPrice } from "../utils/format.js";
+import { imgProps } from "../utils/image.js";
+import useSeo from "../hooks/useSeo.js";
 
 export default function Cart() {
+  useSeo({ title: "Your Cart", noindex: true });
   const { cart, updateItem, removeItem, applyCoupon, removeCoupon } = useCart();
   const { isAuthenticated } = useAuth();
   const { showToast } = useToast();
@@ -77,7 +80,7 @@ export default function Cart() {
               >
                 <Link to={`/product/${item.product.slug}`} className="flex-shrink-0">
                   <img
-                    src={item.product.images?.[0]}
+                    {...imgProps(item.product.images?.[0], 200)}
                     alt={item.product.name}
                     className="h-24 w-24 rounded-xl object-cover"
                   />

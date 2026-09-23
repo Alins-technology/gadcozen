@@ -51,7 +51,9 @@ export const getProducts = asyncHandler(async (req, res) => {
   };
   const sortBy = sortMap[sort] || sortMap.featured;
 
+  // List views only need card fields — skip the long text to keep responses small.
   const products = await Product.find(query)
+    .select("-description -ingredients -howToUse")
     .populate("category", "name slug")
     .sort(sortBy)
     .skip((page - 1) * limit)

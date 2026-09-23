@@ -1,24 +1,76 @@
 <!doctype html>
-<html lang="en">
+<html lang="en-IN">
   <head>
     <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/images/brand/favicon.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="theme-color" content="#037D8F" />
+    <title>GADCO ZEN | Skincare That Feels As Good As It Looks</title>
     <meta
       name="description"
-      content="GADCO ZEN — simple, effective skincare and personal care essentials for your everyday routine."
+      content="GADCO ZEN — simple, effective skincare and personal care essentials: face washes, sunscreens, hair care and body care. Free shipping above ₹999."
     />
-    <title>GADCO ZEN | Skincare That Feels As Good As It Looks</title>
+    <meta name="robots" content="index, follow" />
+    <meta name="theme-color" content="#037D8F" />
+    <link rel="canonical" href="__SITE_URL__/" />
+    <link rel="icon" type="image/svg+xml" href="/images/brand/favicon.svg" />
+    <link rel="apple-touch-icon" href="/images/brand/logo.png" />
+
+    <!-- Open Graph / social previews (pages update these at runtime) -->
+    <meta property="og:site_name" content="GADCO ZEN" />
+    <meta property="og:type" content="website" />
+    <meta property="og:locale" content="en_IN" />
+    <meta property="og:url" content="__SITE_URL__/" />
+    <meta property="og:title" content="GADCO ZEN | Skincare That Feels As Good As It Looks" />
+    <meta
+      property="og:description"
+      content="Simple, effective skincare and personal care essentials for your everyday routine."
+    />
+    <meta property="og:image" content="__SITE_URL__/images/products/fusion-sunscreen/fusion-sunscreen-1200.webp" />
+    <meta name="twitter:card" content="summary_large_image" />
+
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "Organization",
+        "name": "GADCO ZEN",
+        "url": "__SITE_URL__/",
+        "logo": "__SITE_URL__/images/brand/logo.png",
+        "email": "vamaskinhair@gmail.com",
+        "telephone": "+91-93159-10949"
+      }
+    </script>
+
+    <!-- Hero image is the largest thing above the fold: fetch it immediately -->
+    <link
+      rel="preload"
+      as="image"
+      type="image/webp"
+      href="/images/products/fusion-sunscreen/fusion-sunscreen-600.webp"
+      fetchpriority="high"
+    />
+
+    <!-- Fonts load without blocking the first paint -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
+      rel="preload"
+      as="style"
       href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:ital,wght@0,500;0,600;0,700;1,500&display=swap"
+    />
+    <link
       rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:ital,wght@0,500;0,600;0,700;1,500&display=swap"
+      media="print"
+      onload="this.media='all'"
     />
   </head>
   <body>
     <div id="root"></div>
+    <noscript>
+      <p style="padding: 24px; font-family: sans-serif">
+        GADCO ZEN — skincare, hair care and body care essentials. Please enable JavaScript to shop
+        on this website.
+      </p>
+    </noscript>
     <script type="module" src="/src/main.jsx"></script>
   </body>
 </html>

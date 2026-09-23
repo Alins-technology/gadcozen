@@ -1,12 +1,14 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { motion } from "framer-motion";
 import { Mail, Lock, Eye, EyeOff } from "lucide-react";
 import { useAuth } from "../context/AuthContext.jsx";
 import { useToast } from "../context/ToastContext.jsx";
 import Logo from "../components/Logo.jsx";
+import useSeo from "../hooks/useSeo.js";
 
 export default function Login() {
+  useSeo({ title: "Login", noindex: true });
   const [form, setForm] = useState({ email: "", password: "" });
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -15,9 +17,6 @@ export default function Login() {
   const navigate = useNavigate();
   const location = useLocation();
 
-  useEffect(() => {
-    document.title = "Login | GADCO ZEN";
-  }, []);
 
   const handleSubmit = async (e) => {
     e.preventDefault();

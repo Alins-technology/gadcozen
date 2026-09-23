@@ -1,21 +1,20 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { Mail, Lock, User, Phone } from "lucide-react";
 import { useAuth } from "../context/AuthContext.jsx";
 import { useToast } from "../context/ToastContext.jsx";
 import Logo from "../components/Logo.jsx";
+import useSeo from "../hooks/useSeo.js";
 
 export default function Register() {
+  useSeo({ title: "Create Account", noindex: true });
   const [form, setForm] = useState({ name: "", email: "", phone: "", password: "" });
   const [loading, setLoading] = useState(false);
   const { register } = useAuth();
   const { showToast } = useToast();
   const navigate = useNavigate();
 
-  useEffect(() => {
-    document.title = "Create Account | GADCO ZEN";
-  }, []);
 
   const handleSubmit = async (e) => {
     e.preventDefault();

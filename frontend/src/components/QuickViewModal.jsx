@@ -7,6 +7,7 @@ import RatingStars from "./RatingStars.jsx";
 import { formatPrice } from "../utils/format.js";
 import { useCart } from "../context/CartContext.jsx";
 import { useToast } from "../context/ToastContext.jsx";
+import { imgProps } from "../utils/image.js";
 
 export default function QuickViewModal({ product, open, onClose }) {
   const [qty, setQty] = useState(1);
@@ -30,7 +31,7 @@ export default function QuickViewModal({ product, open, onClose }) {
     <Modal open={open} onClose={onClose} maxWidth="max-w-2xl">
       <div className="grid gap-6 sm:grid-cols-2">
         <div className="aspect-square overflow-hidden rounded-2xl bg-brand-50">
-          <img src={product.images?.[0]} alt={product.name} className="h-full w-full object-cover" />
+          <img {...imgProps(product.images?.[0], 600)} alt={product.name} className="h-full w-full object-cover" />
         </div>
         <div className="flex flex-col">
           <p className="text-xs font-medium uppercase tracking-wide text-brand-600">

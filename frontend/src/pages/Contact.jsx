@@ -1,21 +1,23 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Mail, Phone, Clock, MapPin } from "lucide-react";
 import siteConfig from "../config/siteConfig.js";
 import Breadcrumbs from "../components/Breadcrumbs.jsx";
 import { submitContactForm } from "../services/contactService.js";
 import { useToast } from "../context/ToastContext.jsx";
 import { getErrorMessage } from "../services/api.js";
+import useSeo from "../hooks/useSeo.js";
 
 const initialForm = { name: "", email: "", phone: "", subject: "", message: "" };
 
 export default function Contact() {
+  useSeo({
+    title: "Contact Us",
+    description: `Get in touch with GADCO ZEN for orders, returns or product questions. Email ${siteConfig.email} or call ${siteConfig.phone}.`,
+  });
   const [form, setForm] = useState(initialForm);
   const [sending, setSending] = useState(false);
   const { showToast } = useToast();
 
-  useEffect(() => {
-    document.title = "Contact Us | GADCO ZEN";
-  }, []);
 
   const handleSubmit = async (e) => {
     e.preventDefault();

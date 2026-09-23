@@ -16,6 +16,8 @@ import { getErrorMessage } from "../services/api.js";
 import { formatPrice } from "../utils/format.js";
 import { loadRazorpay } from "../utils/loadRazorpay.js";
 import EmptyState from "../components/EmptyState.jsx";
+import { imgProps } from "../utils/image.js";
+import useSeo from "../hooks/useSeo.js";
 
 const steps = ["Contact", "Shipping", "Review", "Payment"];
 
@@ -52,6 +54,7 @@ const pickAddressFields = (a) => ({
 });
 
 export default function Checkout() {
+  useSeo({ title: "Checkout", noindex: true });
   const { cart, refreshServerCart } = useCart();
   const { user } = useAuth();
   const { showToast } = useToast();
@@ -77,7 +80,6 @@ export default function Checkout() {
   const selectedMethod = availableMethods.includes(paymentMethod) ? paymentMethod : availableMethods[0];
 
   useEffect(() => {
-    document.title = "Checkout | GADCO ZEN";
     fetchAddresses()
       .then(({ addresses }) => {
         setSavedAddresses(addresses || []);
@@ -372,7 +374,7 @@ export default function Checkout() {
                   {items.map((item) => (
                     <li key={item.product._id} className="flex items-center gap-3 py-3">
                       <img
-                        src={item.product.images?.[0]}
+                        {...imgProps(item.product.images?.[0], 200)}
                         alt={item.product.name}
                         className="h-14 w-14 rounded-lg object-cover"
                       />
