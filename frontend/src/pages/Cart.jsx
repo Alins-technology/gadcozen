@@ -20,6 +20,16 @@ export default function Cart() {
 
   const items = cart.items || [];
 
+  const handleQuantity = async (productId, quantity) => {
+    const res = await updateItem(productId, quantity);
+    if (!res.success) showToast(res.message, "error");
+  };
+
+  const handleRemove = async (productId) => {
+    const res = await removeItem(productId);
+    if (!res.success) showToast(res.message, "error");
+  };
+
   const handleApplyCoupon = async (e) => {
     e.preventDefault();
     if (!couponCode.trim()) return;
@@ -84,7 +94,7 @@ export default function Cart() {
                       <p className="text-xs text-ink-500">{item.product.quantity}</p>
                     </div>
                     <button
-                      onClick={() => removeItem(item.product._id)}
+                      onClick={() => handleRemove(item.product._id)}
                       className="text-ink-500 hover:text-red-500"
                       aria-label="Remove item"
                     >
@@ -94,7 +104,7 @@ export default function Cart() {
                   <div className="mt-auto flex items-center justify-between pt-3">
                     <QuantitySelector
                       value={item.quantity}
-                      onChange={(q) => updateItem(item.product._id, q)}
+                      onChange={(q) => handleQuantity(item.product._id, q)}
                       max={item.product.stock}
                     />
                     <span className="text-base font-semibold text-ink-900">
@@ -127,6 +137,10 @@ export default function Cart() {
                 Apply
               </button>
             </form>
+            {cart.couponNotice && <p className="mt-2 text-xs text-amber-700">{cart.couponNotice}</p>}
+            {!isAuthenticated && (
+              <p className="mt-2 text-xs text-ink-500">Log in to use a coupon code.</p>
+            )}
             {cart.coupon?.code && (
               <div className="mt-2 flex items-center justify-between rounded-lg bg-brand-50 px-3 py-2 text-xs text-brand-700">
                 <span>

@@ -25,7 +25,8 @@ write through the API.
 **Frontend:** React 18, Vite, React Router v6, Tailwind CSS, Framer Motion, Axios, Lucide icons.
 
 **Backend:** Node.js, Express, MongoDB, Mongoose, JWT auth, bcrypt password hashing,
-express-validator, multer (image uploads).
+express-validator, multer (image uploads), Razorpay (payments), Nodemailer (SMTP email),
+helmet + express-rate-limit (security), optional Cloudinary (image hosting).
 
 ## 3. Folder Structure
 
@@ -62,12 +63,6 @@ gadco-zen/
 - A MongoDB database — either a local `mongod` instance or a free
   [MongoDB Atlas](https://www.mongodb.com/atlas) cluster
 
-> **A note on this build environment:** this project was generated inside a sandboxed cloud
-> workspace with no access to the public npm registry, so `npm install` could not be run here to
-> produce a `node_modules` folder or a lockfile. Every backend file was syntax-checked with
-> `node --check`, and the whole codebase follows plain, well-supported APIs from each listed
-> dependency — but you should run `npm install` yourself the first time you set this project up
-> locally, and do a quick smoke test before relying on it.
 
 ## 5. Installation
 
@@ -96,7 +91,16 @@ cp frontend/.env.example frontend/.env
 | `JWT_EXPIRES_IN` | Token lifetime, e.g. `7d` |
 | `CLIENT_URL` | URL of the running frontend, for CORS (default `http://localhost:5173`) |
 | `ADMIN_EMAIL` / `ADMIN_PASSWORD` | Seeded admin login — **change before production** |
-| `DEMO_CUSTOMER_EMAIL` / `DEMO_CUSTOMER_PASSWORD` | Seeded demo customer login |
+| `DEMO_CUSTOMER_EMAIL` / `DEMO_CUSTOMER_PASSWORD` | Seeded demo customer login (not created in production) |
+| `FREE_SHIPPING_THRESHOLD` / `STANDARD_SHIPPING_FEE` | Shipping rules (default ₹999 / ₹79) |
+| `COD_ENABLED` / `COD_FEE` | Turn Cash on Delivery on/off, optional COD fee |
+| `RAZORPAY_KEY_ID` / `RAZORPAY_KEY_SECRET` | Razorpay API keys (online payments) |
+| `RAZORPAY_WEBHOOK_SECRET` | Secret for the Razorpay webhook (see section 17) |
+| `SMTP_HOST` / `SMTP_PORT` / `SMTP_USER` / `SMTP_PASS` / `EMAIL_FROM` | Email sending (order confirmations, password reset) |
+| `ADMIN_NOTIFY_EMAIL` | Store owner inbox for new-order and contact-form alerts |
+| `CLOUDINARY_URL` | Optional — store admin-uploaded images on Cloudinary |
+
+All of these are documented in `backend/.env.example`.
 
 **`frontend/.env`**
 
@@ -212,10 +216,12 @@ rebuild.
 
 - **Guest cart:** unauthenticated users get a cart stored in `localStorage`; on login it's merged
   into their MongoDB-backed cart automatically.
-- **Checkout/payment:** the payment step is a clearly-labeled demo flow (mock online payment or
-  Cash on Delivery). No real payment gateway is wired up, but the order model and checkout flow
-  are structured so a real gateway (Razorpay/Stripe) can be dropped in behind the same endpoint
-  without changing the schema.
+- **Checkout/payment:** Razorpay (UPI, cards, net banking, wallets) and Cash on Delivery. Stock is
+  reserved atomically when an order is created, so two buyers can never get the last unit. Online
+  orders stay `Pending` until the payment signature is verified (browser callback) or Razorpay's
+  webhook confirms it; unpaid orders release their stock after `PENDING_PAYMENT_TTL_MINUTES`.
+  Cancelling a paid online order from the admin panel refunds it through Razorpay automatically.
+  Without Razorpay keys, a "test mode" online payment is available in development only.
 - **Reviews:** the seed script inserts a few reviews clearly marked `isDemo: true` and labeled
   "Demo review" in the UI — they're never presented as real customer feedback. Authenticated users
   can submit real reviews from any product page, and the review is flagged
@@ -223,3 +229,26 @@ rebuild.
   product.
 - **Claims:** all product copy (benefits, ingredients, descriptions) matches the information on
   the supplied product packaging — nothing was invented.
+
+## 17. Going Live Checklist
+
+1. **Business details** — fill in every `TODO(client)` in `frontend/src/config/siteConfig.js`
+   (legal name, address, GSTIN, grievance officer, social links, return window...). The footer,
+   contact page and all policy pages read from this one file.
+2. **Razorpay**
+   - Complete KYC at dashboard.razorpay.com and get **live** API keys → `RAZORPAY_KEY_ID` /
+     `RAZORPAY_KEY_SECRET` (test with `rzp_test_` keys first).
+   - Razorpay reviews the website: the Contact, Privacy, Terms, Shipping and Refund/Cancellation
+     pages must be live with the real business details.
+   - Settings → Webhooks → add `https://<api-domain>/api/payments/razorpay/webhook` with events
+     `payment.captured` and `order.paid`, and put the chosen secret in `RAZORPAY_WEBHOOK_SECRET`.
+   - Keep "auto-capture" of payments enabled (the default).
+3. **Email** — set the `SMTP_*` variables (e.g. a Google Workspace / Zoho mailbox app password) and
+   `ADMIN_NOTIFY_EMAIL`. Without it, password reset does not work in production.
+4. **Images** — on hosts with a temporary disk (Render/Railway free tiers) set `CLOUDINARY_URL`,
+   otherwise admin-uploaded images disappear on every redeploy.
+5. **Security** — `NODE_ENV=production`, a fresh 32+ character `JWT_SECRET`, change the seeded
+   admin password, and set `CLIENT_URL` to the real domain(s).
+6. **Seeding** — `npm run seed` refuses to run when `NODE_ENV=production` (it would delete real
+   reviews and re-create products). Seed once on an empty database with `--force`, then manage
+   everything from the admin panel.

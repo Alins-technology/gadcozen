@@ -2,6 +2,7 @@ import Product from "../models/Product.js";
 import Category from "../models/Category.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
 import slugify from "slugify";
+import { escapeRegex } from "../utils/escapeRegex.js";
 
 // @route GET /api/products
 // Supports: search, category (slug), minPrice, maxPrice, sort, page, limit, featured, bestseller
@@ -12,17 +13,20 @@ export const getProducts = asyncHandler(async (req, res) => {
     minPrice,
     maxPrice,
     sort = "featured",
-    page = 1,
-    limit = 12,
     featured,
     bestseller,
     newArrival,
   } = req.query;
 
+  const page = Math.max(Number(req.query.page) || 1, 1);
+  const limit = Math.min(Math.max(Number(req.query.limit) || 12, 1), 60);
   const query = { isActive: true };
 
-  if (search) {
-    query.$text = { $search: search };
+  // Substring match (so "sun" finds "sunscreen"), unlike $text which only
+  // matches whole words.
+  if (search?.trim()) {
+    const pattern = new RegExp(escapeRegex(search.trim()), "i");
+    query.$or = [{ name: pattern }, { shortDescription: pattern }, { tags: pattern }];
   }
   if (category) {
     const cat = await Category.findOne({ slug: category });
@@ -51,14 +55,14 @@ export const getProducts = asyncHandler(async (req, res) => {
     .populate("category", "name slug")
     .sort(sortBy)
     .skip((page - 1) * limit)
-    .limit(Number(limit));
+    .limit(limit);
 
   const total = await Product.countDocuments(query);
 
   res.json({
     products,
     total,
-    page: Number(page),
+    page,
     pages: Math.ceil(total / limit),
   });
 });
@@ -75,14 +79,16 @@ export const getProductBySlug = asyncHandler(async (req, res) => {
 
 // @route GET /api/products/:slug/related
 export const getRelatedProducts = asyncHandler(async (req, res) => {
-  const product = await Product.findOne({ slug: req.params.slug });
+  const product = await Product.findOne({ slug: req.params.slug, isActive: true });
   if (!product) return res.status(404).json({ message: "Product not found" });
 
   const related = await Product.find({
     category: product.category,
     _id: { $ne: product._id },
     isActive: true,
-  }).limit(4);
+  })
+    .populate("category", "name slug")
+    .limit(4);
 
   res.json({ products: related });
 });

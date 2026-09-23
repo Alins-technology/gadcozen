@@ -34,6 +34,14 @@ export const AuthProvider = ({ children }) => {
       .finally(() => setLoading(false));
   }, []);
 
+  // The API interceptor clears the stored token on any 401 — mirror that in
+  // React state so the UI doesn't keep showing a logged-in user.
+  useEffect(() => {
+    const onExpired = () => setUser(null);
+    window.addEventListener("gz:session-expired", onExpired);
+    return () => window.removeEventListener("gz:session-expired", onExpired);
+  }, []);
+
   const persistSession = (data) => {
     localStorage.setItem("gz_token", data.token);
     localStorage.setItem("gz_user", JSON.stringify(data.user));

@@ -18,6 +18,17 @@ export const errorHandler = (err, req, res, next) => {
       .map((e) => e.message)
       .join(", ");
   }
+  if (err.name === "MulterError" || err.message?.startsWith("Only image files")) {
+    statusCode = 400;
+    if (err.code === "LIMIT_FILE_SIZE") message = "Image must be 5MB or smaller";
+  }
+  if (err.type === "entity.parse.failed") {
+    statusCode = 400;
+    message = "Invalid request body";
+  }
+  if (err.message?.startsWith("CORS blocked")) {
+    statusCode = 403;
+  }
   if (err.code === 11000) {
     statusCode = 400;
     const field = Object.keys(err.keyValue || {})[0];

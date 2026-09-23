@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
-import { Mail, Phone, Clock } from "lucide-react";
+import { Mail, Phone, Clock, MapPin } from "lucide-react";
+import siteConfig from "../config/siteConfig.js";
 import Breadcrumbs from "../components/Breadcrumbs.jsx";
 import { submitContactForm } from "../services/contactService.js";
 import { useToast } from "../context/ToastContext.jsx";
@@ -41,23 +42,47 @@ export default function Contact() {
             <Mail size={18} className="mt-0.5 text-brand-600" />
             <div>
               <p className="text-sm font-semibold text-ink-900">Email</p>
-              <p className="text-sm text-ink-500">vamaskinhair@gmail.com</p>
+              <a href={`mailto:${siteConfig.email}`} className="text-sm text-ink-500 hover:text-brand-700">
+                {siteConfig.email}
+              </a>
             </div>
           </div>
           <div className="flex items-start gap-3 rounded-2xl border border-slate-100 p-5">
             <Phone size={18} className="mt-0.5 text-brand-600" />
             <div>
               <p className="text-sm font-semibold text-ink-900">Phone</p>
-              <p className="text-sm text-ink-500">+91 93159 10949</p>
+              <a
+                href={`tel:${siteConfig.phone.replace(/\s/g, "")}`}
+                className="text-sm text-ink-500 hover:text-brand-700"
+              >
+                {siteConfig.phone}
+              </a>
             </div>
           </div>
           <div className="flex items-start gap-3 rounded-2xl border border-slate-100 p-5">
             <Clock size={18} className="mt-0.5 text-brand-600" />
             <div>
               <p className="text-sm font-semibold text-ink-900">Business Hours</p>
-              <p className="text-sm text-ink-500">Mon–Sat, 10:00 AM – 6:00 PM (placeholder)</p>
+              <p className="text-sm text-ink-500">{siteConfig.businessHours}</p>
             </div>
           </div>
+          {siteConfig.address && (
+            <div className="flex items-start gap-3 rounded-2xl border border-slate-100 p-5">
+              <MapPin size={18} className="mt-0.5 text-brand-600" />
+              <div>
+                <p className="text-sm font-semibold text-ink-900">Registered Address</p>
+                <p className="text-sm text-ink-500">
+                  {siteConfig.legalName && (
+                    <>
+                      {siteConfig.legalName}
+                      <br />
+                    </>
+                  )}
+                  {siteConfig.address}
+                </p>
+              </div>
+            </div>
+          )}
         </div>
 
         <form onSubmit={handleSubmit} className="rounded-2xl border border-slate-100 p-6">

@@ -345,8 +345,21 @@ const demoReviews = [
 ];
 
 const run = async () => {
-  await connectDB();
   const destroy = process.argv.includes("--destroy");
+  const force = process.argv.includes("--force");
+  const isProduction = process.env.NODE_ENV === "production";
+
+  // Re-seeding wipes products (new ids break existing carts/wishlists/orders),
+  // reviews and coupons. Never do that to a live store by accident.
+  if (isProduction && !force) {
+    console.error(
+      "[seed] NODE_ENV=production — refusing to re-seed a live database (it would delete real " +
+        "reviews, coupons and re-create every product). Run with --force only on a fresh, empty database."
+    );
+    process.exit(1);
+  }
+
+  await connectDB();
 
   if (destroy) {
     await Promise.all([
@@ -387,8 +400,8 @@ const run = async () => {
 
   const customerEmail = (process.env.DEMO_CUSTOMER_EMAIL || "customer@gadcozen.com").toLowerCase();
   const customerPassword = process.env.DEMO_CUSTOMER_PASSWORD || "Customer@12345";
-  let customer = await User.findOne({ email: customerEmail });
-  if (!customer) {
+  let customer = isProduction ? null : await User.findOne({ email: customerEmail });
+  if (!customer && !isProduction) {
     customer = await User.create({
       name: "Demo Customer",
       email: customerEmail,
@@ -415,9 +428,9 @@ const run = async () => {
   }
   console.log(`[seed] Inserted ${productDocs.length} products.`);
 
-  // --- Demo reviews (clearly marked isDemo, shown as demo content in UI) ---
+  // --- Demo reviews (clearly marked isDemo) — development only ---
   let reviewCount = 0;
-  for (const product of productDocs.slice(0, 4)) {
+  for (const product of isProduction ? [] : productDocs.slice(0, 4)) {
     for (const r of demoReviews) {
       await Review.create({
         product: product._id,
@@ -444,13 +457,14 @@ const run = async () => {
     code: "WELCOME10",
     discountPercent: 10,
     minOrderValue: 499,
+    firstOrderOnly: true,
     isActive: true,
   });
-  console.log("[seed] Inserted demo coupon WELCOME10 (10% off, min order ₹499).");
+  console.log("[seed] Inserted demo coupon WELCOME10 (10% off first order, min order ₹499).");
 
   console.log("\n[seed] Done!");
   console.log(`[seed] Admin login   -> ${adminEmail} / ${adminPassword}`);
-  console.log(`[seed] Customer login -> ${customerEmail} / ${customerPassword}`);
+  if (!isProduction) console.log(`[seed] Customer login -> ${customerEmail} / ${customerPassword}`);
   console.log("[seed] Change these credentials before deploying to production.\n");
 
   await mongoose.connection.close();

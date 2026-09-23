@@ -2,6 +2,8 @@ import { useEffect, useState } from "react";
 import { useParams, Link } from "react-router-dom";
 import { fetchOrderByIdAdmin, updateOrderStatusAdmin } from "../../services/orderService.js";
 import { formatPrice, formatDate } from "../../utils/format.js";
+import { paymentMethodLabel, paymentStatusLabel } from "../../utils/orderLabels.js";
+import { getErrorMessage } from "../../services/api.js";
 import { useToast } from "../../context/ToastContext.jsx";
 import PageLoader from "../../components/PageLoader.jsx";
 
@@ -12,23 +14,53 @@ export default function AdminOrderDetail() {
   const [order, setOrder] = useState(null);
   const [loading, setLoading] = useState(true);
   const [updating, setUpdating] = useState(false);
+  const [tracking, setTracking] = useState({ courierName: "", trackingNumber: "", trackingUrl: "" });
   const { showToast } = useToast();
 
   useEffect(() => {
     document.title = "Order Details | GADCO ZEN Admin";
     fetchOrderByIdAdmin(id)
-      .then((data) => setOrder(data.order))
+      .then((data) => {
+        setOrder(data.order);
+        setTracking({
+          courierName: data.order.courierName || "",
+          trackingNumber: data.order.trackingNumber || "",
+          trackingUrl: data.order.trackingUrl || "",
+        });
+      })
       .finally(() => setLoading(false));
   }, [id]);
 
   const handleStatusChange = async (newStatus) => {
+    if (
+      newStatus === "Cancelled" &&
+      order.paymentStatus === "paid" &&
+      order.paymentMethod === "razorpay" &&
+      !window.confirm(`Cancelling will refund ${formatPrice(order.total)} to the customer via Razorpay. Continue?`)
+    ) {
+      return;
+    }
     setUpdating(true);
     try {
-      const { order: updated } = await updateOrderStatusAdmin(id, newStatus);
+      const { order: updated } = await updateOrderStatusAdmin(id, { orderStatus: newStatus, ...tracking });
       setOrder(updated);
       showToast(`Order marked as ${newStatus}`, "success");
-    } catch {
-      showToast("Could not update order status", "error");
+    } catch (err) {
+      showToast(getErrorMessage(err), "error");
+    } finally {
+      setUpdating(false);
+    }
+  };
+
+  const handleSaveTracking = async (e) => {
+    e.preventDefault();
+    setUpdating(true);
+    try {
+      const { order: updated } = await updateOrderStatusAdmin(id, tracking);
+      setOrder(updated);
+      showToast("Tracking details saved", "success");
+    } catch (err) {
+      showToast(getErrorMessage(err), "error");
     } finally {
       setUpdating(false);
     }
@@ -121,15 +153,59 @@ export default function AdminOrderDetail() {
                 <span>Shipping</span>
                 <span>{order.shippingCost === 0 ? "Free" : formatPrice(order.shippingCost)}</span>
               </div>
+              {order.codFee > 0 && (
+                <div className="flex justify-between">
+                  <span>COD fee</span>
+                  <span>{formatPrice(order.codFee)}</span>
+                </div>
+              )}
               <div className="flex justify-between border-t border-brand-50 pt-1 font-semibold text-ink-900">
                 <span>Total</span>
                 <span>{formatPrice(order.total)}</span>
               </div>
               <p className="pt-1 text-xs text-ink-500">
-                {order.paymentMethod === "cod" ? "Cash on Delivery" : "Online (Demo)"} · {order.paymentStatus}
+                {paymentMethodLabel(order.paymentMethod)} · {paymentStatusLabel(order)}
               </p>
+              {order.paymentInfo?.razorpayPaymentId && (
+                <p className="break-all text-xs text-ink-500">
+                  Razorpay payment: {order.paymentInfo.razorpayPaymentId}
+                  {order.paymentInfo.refundId && <> · Refund: {order.paymentInfo.refundId}</>}
+                </p>
+              )}
+              {order.notes && <p className="text-xs text-amber-700">{order.notes}</p>}
             </div>
           </div>
+
+          <form onSubmit={handleSaveTracking} className="rounded-2xl border border-brand-100 bg-white p-5">
+            <h3 className="font-display text-base text-ink-900">Shipment Tracking</h3>
+            <p className="mt-1 text-xs text-ink-500">
+              Shown to the customer and included in the &quot;Shipped&quot; email.
+            </p>
+            <div className="mt-3 space-y-2">
+              <input
+                placeholder="Courier (e.g. Delhivery)"
+                value={tracking.courierName}
+                onChange={(e) => setTracking((t) => ({ ...t, courierName: e.target.value }))}
+                className="input-field"
+              />
+              <input
+                placeholder="Tracking / AWB number"
+                value={tracking.trackingNumber}
+                onChange={(e) => setTracking((t) => ({ ...t, trackingNumber: e.target.value }))}
+                className="input-field"
+              />
+              <input
+                type="url"
+                placeholder="Tracking link (optional)"
+                value={tracking.trackingUrl}
+                onChange={(e) => setTracking((t) => ({ ...t, trackingUrl: e.target.value }))}
+                className="input-field"
+              />
+            </div>
+            <button type="submit" disabled={updating} className="btn-outline mt-3 w-full">
+              Save Tracking
+            </button>
+          </form>
         </div>
       </div>
     </div>

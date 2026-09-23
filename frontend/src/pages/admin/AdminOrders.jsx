@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { Search } from "lucide-react";
 import { fetchAllOrdersAdmin } from "../../services/orderService.js";
 import { formatPrice, formatDate } from "../../utils/format.js";
+import { paymentMethodLabel, paymentStatusLabel } from "../../utils/orderLabels.js";
 import PageLoader from "../../components/PageLoader.jsx";
 
 const statuses = ["", "Pending", "Confirmed", "Processing", "Shipped", "Delivered", "Cancelled"];
@@ -72,6 +73,7 @@ export default function AdminOrders() {
                 <th className="p-3">Customer</th>
                 <th className="p-3">Date</th>
                 <th className="p-3">Total</th>
+                <th className="p-3">Payment</th>
                 <th className="p-3">Status</th>
                 <th className="p-3" />
               </tr>
@@ -87,6 +89,11 @@ export default function AdminOrders() {
                   </td>
                   <td className="p-3 text-ink-700">{formatDate(order.createdAt)}</td>
                   <td className="p-3 text-ink-700">{formatPrice(order.total)}</td>
+                  <td className="p-3 text-xs text-ink-700">
+                    {paymentMethodLabel(order.paymentMethod)}
+                    <br />
+                    <span className="text-ink-500">{paymentStatusLabel(order)}</span>
+                  </td>
                   <td className="p-3">
                     <span className={`rounded-full px-2 py-1 text-xs font-medium ${statusColors[order.orderStatus]}`}>
                       {order.orderStatus}

@@ -7,6 +7,7 @@ import ProductGrid from "../components/ProductGrid.jsx";
 import CategoryCard from "../components/CategoryCard.jsx";
 import RatingStars from "../components/RatingStars.jsx";
 import { fetchProducts, fetchCategories } from "../services/productService.js";
+import { fetchFeaturedReviews } from "../services/reviewService.js";
 
 const trustItems = [
   { icon: Sparkles, title: "Quality Focused", description: "Everyday formulas made with care." },
@@ -15,28 +16,11 @@ const trustItems = [
   { icon: HeadphonesIcon, title: "Customer Support", description: "Here to help with any questions." },
 ];
 
-const demoTestimonials = [
-  {
-    name: "Verified Shopper",
-    rating: 5,
-    text: "The face wash has become part of my daily routine — light, refreshing, and easy to use. (Demo review)",
-  },
-  {
-    name: "Verified Shopper",
-    rating: 5,
-    text: "Loved how lightweight the sunscreen feels under makeup, no white cast at all. (Demo review)",
-  },
-  {
-    name: "Verified Shopper",
-    rating: 4,
-    text: "The moisturizing cream absorbs quickly and doesn't feel heavy. (Demo review)",
-  },
-];
-
 export default function Home() {
   const [featured, setFeatured] = useState([]);
   const [bestsellers, setBestsellers] = useState([]);
   const [categories, setCategories] = useState([]);
+  const [reviews, setReviews] = useState([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -57,6 +41,10 @@ export default function Home() {
       }
     };
     load();
+    // Only real, approved customer reviews — the section hides itself until there are some.
+    fetchFeaturedReviews()
+      .then((data) => setReviews(data.reviews.slice(0, 3)))
+      .catch(() => {});
   }, []);
 
   return (
@@ -279,25 +267,34 @@ export default function Home() {
       )}
 
       {/* REVIEWS */}
-      <section className="container-app py-16 sm:py-20">
-        <SectionHeading eyebrow="Demo Content" title="Customer Reviews" description="Shown here as demo placeholder reviews." />
-        <div className="mt-10 grid gap-5 sm:grid-cols-3">
-          {demoTestimonials.map((t, i) => (
-            <motion.div
-              key={i}
-              initial={{ opacity: 0, y: 16 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.4, delay: i * 0.08 }}
-              className="rounded-2xl border border-slate-100 bg-white p-6 shadow-soft"
-            >
-              <RatingStars rating={t.rating} />
-              <p className="mt-3 text-sm text-ink-700">{t.text}</p>
-              <p className="mt-4 text-xs font-medium text-ink-500">{t.name}</p>
-            </motion.div>
-          ))}
-        </div>
-      </section>
+      {reviews.length > 0 && (
+        <section className="container-app py-16 sm:py-20">
+          <SectionHeading eyebrow="Real reviews" title="What Our Customers Say" />
+          <div className="mt-10 grid gap-5 sm:grid-cols-3">
+            {reviews.map((t, i) => (
+              <motion.div
+                key={t._id}
+                initial={{ opacity: 0, y: 16 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.4, delay: i * 0.08 }}
+                className="rounded-2xl border border-slate-100 bg-white p-6 shadow-soft"
+              >
+                <RatingStars rating={t.rating} />
+                {t.title && <p className="mt-3 text-sm font-semibold text-ink-900">{t.title}</p>}
+                <p className="mt-2 line-clamp-4 text-sm text-ink-700">{t.comment}</p>
+                <p className="mt-4 text-xs font-medium text-ink-500">
+                  {t.name}
+                  {t.verifiedPurchase && " · Verified Purchase"} ·{" "}
+                  <Link to={`/product/${t.product.slug}`} className="text-brand-700 hover:underline">
+                    {t.product.name}
+                  </Link>
+                </p>
+              </motion.div>
+            ))}
+          </div>
+        </section>
+      )}
     </div>
   );
 }

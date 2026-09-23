@@ -2,13 +2,25 @@ import { AnimatePresence, motion } from "framer-motion";
 import { Link } from "react-router-dom";
 import { X, ShoppingBag, Trash2 } from "lucide-react";
 import { useCart } from "../context/CartContext.jsx";
+import { useToast } from "../context/ToastContext.jsx";
 import { formatPrice } from "../utils/format.js";
 import QuantitySelector from "./QuantitySelector.jsx";
 import EmptyState from "./EmptyState.jsx";
 
 export default function CartDrawer({ open, onClose }) {
   const { cart, updateItem, removeItem } = useCart();
+  const { showToast } = useToast();
   const items = cart.items || [];
+
+  const handleQuantity = async (productId, quantity) => {
+    const res = await updateItem(productId, quantity);
+    if (!res.success) showToast(res.message, "error");
+  };
+
+  const handleRemove = async (productId) => {
+    const res = await removeItem(productId);
+    if (!res.success) showToast(res.message, "error");
+  };
 
   return (
     <AnimatePresence>
@@ -65,7 +77,7 @@ export default function CartDrawer({ open, onClose }) {
                             {item.product.name}
                           </Link>
                           <button
-                            onClick={() => removeItem(item.product._id)}
+                            onClick={() => handleRemove(item.product._id)}
                             className="flex-shrink-0 text-ink-500 hover:text-red-500"
                             aria-label="Remove item"
                           >
@@ -77,7 +89,7 @@ export default function CartDrawer({ open, onClose }) {
                           <QuantitySelector
                             size="sm"
                             value={item.quantity}
-                            onChange={(q) => updateItem(item.product._id, q)}
+                            onChange={(q) => handleQuantity(item.product._id, q)}
                             max={item.product.stock}
                           />
                           <span className="text-sm font-semibold text-ink-900">

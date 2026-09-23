@@ -1,13 +1,17 @@
 import ContactSubmission from "../models/ContactSubmission.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
+import { sendEmail } from "../utils/sendEmail.js";
+import { contactNotificationEmail } from "../utils/emailTemplates.js";
 
 // @route POST /api/contact
 export const submitContactForm = asyncHandler(async (req, res) => {
   const { name, email, phone, subject, message } = req.body;
   const submission = await ContactSubmission.create({ name, email, phone, subject, message });
+  if (process.env.ADMIN_NOTIFY_EMAIL) {
+    sendEmail({ to: process.env.ADMIN_NOTIFY_EMAIL, ...contactNotificationEmail(submission) });
+  }
   res.status(201).json({
     message: "Thanks for reaching out — our team will get back to you soon.",
-    submission,
   });
 });
 

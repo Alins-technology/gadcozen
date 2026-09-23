@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useParams, Link } from "react-router-dom";
 import { fetchMyOrderByNumber } from "../../services/orderService.js";
 import { formatPrice, formatDate } from "../../utils/format.js";
+import { paymentMethodLabel, paymentStatusLabel } from "../../utils/orderLabels.js";
 import PageLoader from "../../components/PageLoader.jsx";
 import EmptyState from "../../components/EmptyState.jsx";
 import { PackageSearch } from "lucide-react";
@@ -28,6 +29,8 @@ export default function OrderDetail() {
 
   const currentStepIndex = statusSteps.indexOf(order.orderStatus);
   const isCancelled = order.orderStatus === "Cancelled";
+  const awaitingPayment =
+    order.paymentMethod === "razorpay" && order.paymentStatus === "pending" && order.orderStatus === "Pending";
 
   return (
     <div className="rounded-2xl border border-slate-100 p-6">
@@ -72,7 +75,36 @@ export default function OrderDetail() {
           </div>
         </div>
       ) : (
-        <div className="mt-6 rounded-xl bg-red-50 p-3 text-sm text-red-700">This order was cancelled.</div>
+        <div className="mt-6 rounded-xl bg-red-50 p-3 text-sm text-red-700">
+          This order was cancelled.
+          {order.paymentStatus === "refunded" &&
+            " Your refund has been initiated to the original payment method."}
+          {order.paymentStatus === "failed" && " Payment was not completed, so you have not been charged."}
+        </div>
+      )}
+
+      {awaitingPayment && (
+        <div className="mt-4 rounded-xl bg-amber-50 p-3 text-sm text-amber-800">
+          We&apos;re waiting for payment confirmation. If money was debited, this updates automatically
+          within a few minutes.
+        </div>
+      )}
+
+      {order.trackingNumber && !isCancelled && (
+        <div className="mt-4 rounded-xl bg-brand-50/70 p-3 text-sm text-ink-700">
+          Shipped via <strong>{order.courierName || "courier"}</strong> · Tracking no.{" "}
+          <strong>{order.trackingNumber}</strong>
+          {order.trackingUrl && (
+            <a
+              href={order.trackingUrl}
+              target="_blank"
+              rel="noreferrer"
+              className="ml-2 font-medium text-brand-700 underline"
+            >
+              Track shipment
+            </a>
+          )}
+        </div>
       )}
 
       <div className="mt-6 divide-y divide-slate-100 rounded-xl border border-slate-100">
@@ -118,13 +150,18 @@ export default function OrderDetail() {
               <span>Shipping</span>
               <span>{order.shippingCost === 0 ? "Free" : formatPrice(order.shippingCost)}</span>
             </div>
+            {order.codFee > 0 && (
+              <div className="flex justify-between">
+                <span>COD fee</span>
+                <span>{formatPrice(order.codFee)}</span>
+              </div>
+            )}
             <div className="flex justify-between font-semibold text-ink-900">
               <span>Total</span>
               <span>{formatPrice(order.total)}</span>
             </div>
             <p className="pt-1 text-xs text-ink-500">
-              Payment: {order.paymentMethod === "cod" ? "Cash on Delivery" : "Online (Demo)"} ·{" "}
-              {order.paymentStatus}
+              Payment: {paymentMethodLabel(order.paymentMethod)} · {paymentStatusLabel(order)}
             </p>
           </div>
         </div>

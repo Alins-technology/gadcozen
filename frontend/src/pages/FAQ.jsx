@@ -13,7 +13,7 @@ const faqData = [
       },
       {
         q: "Can I change or cancel my order?",
-        a: "Contact us as soon as possible after placing an order. Once an order has shipped, it can no longer be modified.",
+        a: "Contact us with your order number before it ships and we'll cancel it. If you paid online, the refund goes back to your original payment method. Once an order has shipped it can no longer be cancelled, but eligible items can be returned.",
       },
     ],
   },
@@ -26,7 +26,7 @@ const faqData = [
       },
       {
         q: "Is shipping free?",
-        a: "Yes — shipping is free on orders above ₹999. Below that, a flat shipping fee applies.",
+        a: "Shipping is free on orders above ₹999. Below that, a flat shipping fee applies, shown at checkout before you pay.",
       },
     ],
   },
@@ -44,7 +44,11 @@ const faqData = [
     items: [
       {
         q: "What payment methods are supported?",
-        a: "This demo store supports a simulated online payment flow and Cash on Delivery. No real payment gateway is connected yet.",
+        a: "You can pay online with UPI, debit/credit cards, net banking and wallets through Razorpay's secure checkout, or choose Cash on Delivery where available.",
+      },
+      {
+        q: "My money was debited but the order shows as not paid. What now?",
+        a: "Payments are usually confirmed within a few minutes automatically. If a payment fails after money is debited, the bank or Razorpay reverses it within 5–7 working days. Contact us with your order number if you need help.",
       },
     ],
   },
@@ -62,7 +66,7 @@ const faqData = [
     items: [
       {
         q: "How do I reset my password?",
-        a: "Use the 'Forgot password?' link on the login page to receive password reset instructions.",
+        a: "Use the 'Forgot password?' link on the login page — we'll email you a secure link to set a new password.",
       },
     ],
   },

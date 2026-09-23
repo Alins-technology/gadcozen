@@ -1,6 +1,7 @@
 import express from "express";
 import {
   getProductReviews,
+  getFeaturedReviews,
   createReview,
   getAllReviews,
   moderateReview,
@@ -10,6 +11,7 @@ import { protect, admin } from "../middleware/authMiddleware.js";
 
 const router = express.Router();
 
+router.get("/featured", getFeaturedReviews);
 router.get("/product/:productId", getProductReviews);
 router.post("/product/:productId", protect, createReview);
 

@@ -4,6 +4,8 @@ import Wishlist from "../models/Wishlist.js";
 import { generateToken } from "../utils/generateToken.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
 import crypto from "crypto";
+import { sendEmail, isEmailConfigured, clientUrl } from "../utils/sendEmail.js";
+import { passwordResetEmail } from "../utils/emailTemplates.js";
 
 const sendAuthResponse = (res, user, statusCode = 200) => {
   const token = generateToken(user._id, user.role);
@@ -62,7 +64,7 @@ export const forgotPassword = asyncHandler(async (req, res) => {
 
   // Always respond the same way to avoid leaking which emails exist
   if (!user) {
-    return res.json({ message: "If that email exists, a reset link has been generated." });
+    return res.json({ message: "If that email exists, a reset link has been sent to it." });
   }
 
   const resetToken = crypto.randomBytes(32).toString("hex");
@@ -70,23 +72,18 @@ export const forgotPassword = asyncHandler(async (req, res) => {
   user.resetPasswordExpires = Date.now() + 30 * 60 * 1000; // 30 minutes
   await user.save();
 
-  // SECURITY: the reset token must only ever reach the account owner's inbox.
-  // TODO: wire up a real email provider (e.g. Nodemailer + SMTP, SendGrid,
-  // Resend) here and email `resetToken` as a /reset-password/:token link.
-  // Until that's connected, we log it server-side so it's still usable while
-  // testing, but we NEVER send it back in the API response in production —
-  // doing so would let anyone reset ANY account's password just by knowing
-  // their email address.
-  if (process.env.NODE_ENV !== "production") {
-    console.log(`[auth] Password reset token for ${user.email}: ${resetToken}`);
-  }
+  // SECURITY: the reset token must only ever reach the account owner's inbox —
+  // never the API response in production, or anyone could reset any account
+  // just by knowing its email address.
+  const resetUrl = `${clientUrl()}/reset-password/${resetToken}`;
+  await sendEmail({ to: user.email, ...passwordResetEmail(resetUrl) });
 
   const payload = {
-    message: "If that email exists, a reset link has been generated.",
+    message: "If that email exists, a reset link has been sent to it.",
   };
-  // Only exposed outside production, and only to make local/dev testing of
-  // the reset flow possible without an email provider configured.
-  if (process.env.NODE_ENV !== "production") {
+  // Outside production, and only when no email provider is configured, hand
+  // the token back so the reset flow can still be tested locally.
+  if (process.env.NODE_ENV !== "production" && !isEmailConfigured()) {
     payload.devResetToken = resetToken;
   }
   res.json(payload);

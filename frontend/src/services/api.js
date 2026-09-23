@@ -21,6 +21,7 @@ api.interceptors.response.use(
       // Token invalid/expired - clear it so the UI falls back to guest state
       localStorage.removeItem("gz_token");
       localStorage.removeItem("gz_user");
+      window.dispatchEvent(new Event("gz:session-expired"));
     }
     return Promise.reject(error);
   }

@@ -10,3 +10,4 @@ export const fetchAllReviewsAdmin = () => api.get("/reviews").then((r) => r.data
 export const moderateReviewAdmin = (id, isApproved) =>
   api.put(`/reviews/${id}/moderate`, { isApproved }).then((r) => r.data);
 export const deleteReviewAdmin = (id) => api.delete(`/reviews/${id}`).then((r) => r.data);
+export const fetchFeaturedReviews = () => api.get("/reviews/featured").then((r) => r.data);

@@ -1,7 +1,8 @@
 import { useEffect } from "react";
 import Breadcrumbs from "./Breadcrumbs.jsx";
+import siteConfig from "../config/siteConfig.js";
 
-export default function LegalLayout({ title, updated = "August 2026", children }) {
+export default function LegalLayout({ title, updated = siteConfig.policies.lastUpdated, children }) {
   useEffect(() => {
     document.title = `${title} | GADCO ZEN`;
   }, [title]);

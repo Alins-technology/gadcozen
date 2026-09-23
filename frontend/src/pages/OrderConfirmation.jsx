@@ -4,6 +4,7 @@ import { motion } from "framer-motion";
 import { CheckCircle2 } from "lucide-react";
 import { fetchMyOrderByNumber } from "../services/orderService.js";
 import { formatPrice, formatDate } from "../utils/format.js";
+import { paymentMethodLabel, paymentStatusLabel } from "../utils/orderLabels.js";
 import PageLoader from "../components/PageLoader.jsx";
 import EmptyState from "../components/EmptyState.jsx";
 import { PackageSearch } from "lucide-react";
@@ -52,6 +53,10 @@ export default function OrderConfirmation() {
           Thank you — your order <strong>{order.orderNumber}</strong> has been placed on{" "}
           {formatDate(order.createdAt)}.
         </p>
+        <p className="mt-1 text-xs text-ink-500">
+          Payment: {paymentMethodLabel(order.paymentMethod)} · {paymentStatusLabel(order)}. A
+          confirmation email is on its way to {order.contactEmail}.
+        </p>
 
         <div className="mt-6 divide-y divide-slate-100 rounded-2xl border border-slate-100 text-left">
           {order.items.map((item) => (
@@ -83,6 +88,12 @@ export default function OrderConfirmation() {
               <span>Shipping</span>
               <span>{order.shippingCost === 0 ? "Free" : formatPrice(order.shippingCost)}</span>
             </div>
+            {order.codFee > 0 && (
+              <div className="flex justify-between">
+                <span>COD fee</span>
+                <span>{formatPrice(order.codFee)}</span>
+              </div>
+            )}
             <div className="flex justify-between text-base font-semibold text-ink-900">
               <span>Total</span>
               <span>{formatPrice(order.total)}</span>

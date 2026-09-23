@@ -46,7 +46,7 @@ export default function ForgotPassword() {
 
         {sent ? (
           <div className="mt-6 rounded-xl bg-brand-50 p-4 text-sm text-brand-800">
-            <p>If that email exists, a reset link has been generated.</p>
+            <p>If an account exists for that email, we&apos;ve sent a password reset link. Please check your inbox (and spam folder).</p>
             {devToken && (
               <p className="mt-3">
                 Development mode — continue here:{" "}

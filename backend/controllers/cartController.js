@@ -1,10 +1,7 @@
 import Cart from "../models/Cart.js";
 import Product from "../models/Product.js";
-import Coupon from "../models/Coupon.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
-
-const FREE_SHIPPING_THRESHOLD = 999;
-const STANDARD_SHIPPING = 79;
+import { validateCoupon, computeTotals } from "../services/pricingService.js";
 
 const getOrCreateCart = async (userId) => {
   let cart = await Cart.findOne({ user: userId });
@@ -12,31 +9,45 @@ const getOrCreateCart = async (userId) => {
   return cart;
 };
 
-const buildCartResponse = async (cart) => {
-  const populated = await cart.populate("items.product");
-  const items = populated.items
-    .filter((i) => i.product) // drop items whose product was deleted
-    .map((i) => ({
-      product: i.product,
-      quantity: i.quantity,
-      lineTotal: i.product.price * i.quantity,
-    }));
+const toQuantity = (value) => {
+  const n = Math.floor(Number(value));
+  return Number.isFinite(n) ? n : NaN;
+};
 
-  const subtotal = items.reduce((sum, i) => sum + i.lineTotal, 0);
-  let discount = 0;
-  if (cart.coupon?.discountPercent) {
-    discount = Math.round((subtotal * cart.coupon.discountPercent) / 100);
+const buildCartResponse = async (cart) => {
+  await cart.populate("items.product");
+  // Drop items whose product was deleted or deactivated.
+  const liveItems = cart.items.filter((i) => i.product && i.product.isActive);
+  const items = liveItems.map((i) => ({
+    product: i.product,
+    quantity: i.quantity,
+    lineTotal: i.product.price * i.quantity,
+  }));
+
+  // A coupon applied earlier may no longer qualify (cart shrank below the
+  // minimum, coupon expired or was disabled) — drop it instead of showing a
+  // discount that checkout would reject.
+  let couponNotice;
+  if (cart.coupon?.code) {
+    const subtotal = items.reduce((sum, i) => sum + i.lineTotal, 0);
+    const { coupon, error } = await validateCoupon(cart.coupon.code, subtotal, cart.user);
+    if (error) {
+      couponNotice = `Coupon ${cart.coupon.code} removed: ${error}`;
+      cart.coupon = undefined;
+      await cart.save();
+    } else if (coupon.discountPercent !== cart.coupon.discountPercent) {
+      cart.coupon.discountPercent = coupon.discountPercent;
+      await cart.save();
+    }
   }
-  const shippingCost = subtotal === 0 || subtotal - discount >= FREE_SHIPPING_THRESHOLD ? 0 : STANDARD_SHIPPING;
-  const total = Math.max(subtotal - discount + shippingCost, 0);
+
+  const totals = computeTotals(items, cart.coupon?.discountPercent || 0);
 
   return {
     items,
-    coupon: cart.coupon,
-    subtotal,
-    discount,
-    shippingCost,
-    total,
+    coupon: cart.coupon?.code ? cart.coupon : null,
+    couponNotice,
+    ...totals,
     itemCount: items.reduce((sum, i) => sum + i.quantity, 0),
   };
 };
@@ -49,7 +60,10 @@ export const getCart = asyncHandler(async (req, res) => {
 
 // @route POST /api/cart/items
 export const addToCart = asyncHandler(async (req, res) => {
-  const { productId, quantity = 1 } = req.body;
+  const { productId } = req.body;
+  const quantity = toQuantity(req.body.quantity ?? 1);
+  if (!(quantity >= 1)) return res.status(400).json({ message: "Invalid quantity" });
+
   const product = await Product.findById(productId);
   if (!product || !product.isActive) {
     return res.status(404).json({ message: "Product not found" });
@@ -60,7 +74,7 @@ export const addToCart = asyncHandler(async (req, res) => {
   // Check against the TOTAL quantity that would end up in the cart, not just
   // the quantity being added this call — otherwise adding 1 more at a time
   // could push the cart past available stock without ever tripping this check.
-  const desiredTotal = (existing?.quantity || 0) + Number(quantity);
+  const desiredTotal = (existing?.quantity || 0) + quantity;
   if (product.stock < desiredTotal) {
     return res.status(400).json({ message: "Not enough stock available" });
   }
@@ -76,7 +90,9 @@ export const addToCart = asyncHandler(async (req, res) => {
 
 // @route PUT /api/cart/items/:productId
 export const updateCartItem = asyncHandler(async (req, res) => {
-  const { quantity } = req.body;
+  const quantity = toQuantity(req.body.quantity);
+  if (Number.isNaN(quantity)) return res.status(400).json({ message: "Invalid quantity" });
+
   const cart = await getOrCreateCart(req.user._id);
   const item = cart.items.find((i) => i.product.toString() === req.params.productId);
   if (!item) return res.status(404).json({ message: "Item not in cart" });
@@ -86,7 +102,7 @@ export const updateCartItem = asyncHandler(async (req, res) => {
   } else {
     const product = await Product.findById(req.params.productId);
     if (product && product.stock < quantity) {
-      return res.status(400).json({ message: "Not enough stock available" });
+      return res.status(400).json({ message: `Only ${product.stock} left in stock` });
     }
     item.quantity = quantity;
   }
@@ -113,21 +129,22 @@ export const clearCart = asyncHandler(async (req, res) => {
 
 // @route POST /api/cart/merge - merges a guest (localStorage) cart into the DB cart after login
 export const mergeCart = asyncHandler(async (req, res) => {
-  const { items = [] } = req.body; // [{ productId, quantity }]
+  const items = Array.isArray(req.body.items) ? req.body.items : []; // [{ productId, quantity }]
   const cart = await getOrCreateCart(req.user._id);
 
   for (const guestItem of items) {
-    const product = await Product.findById(guestItem.productId);
-    if (!product || !product.isActive) continue;
-    const existing = cart.items.find((i) => i.product.toString() === guestItem.productId);
+    const quantity = toQuantity(guestItem.quantity ?? 1);
+    if (!(quantity >= 1)) continue;
+    const product = await Product.findById(guestItem.productId).catch(() => null);
+    if (!product || !product.isActive || product.stock <= 0) continue;
+
+    const existing = cart.items.find((i) => i.product.toString() === String(guestItem.productId));
+    // Never let the merged quantity exceed what's actually in stock.
+    const merged = Math.min((existing?.quantity || 0) + quantity, product.stock);
     if (existing) {
-      existing.quantity += Number(guestItem.quantity || 1);
+      existing.quantity = merged;
     } else {
-      cart.items.push({
-        product: guestItem.productId,
-        quantity: guestItem.quantity || 1,
-        priceAtAdd: product.price,
-      });
+      cart.items.push({ product: product._id, quantity: merged, priceAtAdd: product.price });
     }
   }
   await cart.save();
@@ -136,22 +153,14 @@ export const mergeCart = asyncHandler(async (req, res) => {
 
 // @route POST /api/cart/coupon
 export const applyCoupon = asyncHandler(async (req, res) => {
-  const { code } = req.body;
-  const coupon = await Coupon.findOne({ code: code?.toUpperCase(), isActive: true });
-  if (!coupon) return res.status(404).json({ message: "Invalid coupon code" });
-  if (coupon.expiresAt && coupon.expiresAt < new Date()) {
-    return res.status(400).json({ message: "This coupon has expired" });
-  }
-
   const cart = await getOrCreateCart(req.user._id);
-  const populated = await cart.populate("items.product");
-  const subtotal = populated.items.reduce((sum, i) => sum + i.product.price * i.quantity, 0);
+  await cart.populate("items.product");
+  const subtotal = cart.items
+    .filter((i) => i.product && i.product.isActive)
+    .reduce((sum, i) => sum + i.product.price * i.quantity, 0);
 
-  if (subtotal < coupon.minOrderValue) {
-    return res.status(400).json({
-      message: `Minimum order value of ₹${coupon.minOrderValue} required for this coupon`,
-    });
-  }
+  const { coupon, error } = await validateCoupon(req.body.code, subtotal, req.user._id);
+  if (error) return res.status(400).json({ message: error });
 
   cart.coupon = { code: coupon.code, discountPercent: coupon.discountPercent };
   await cart.save();

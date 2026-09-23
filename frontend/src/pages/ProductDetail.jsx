@@ -1,5 +1,5 @@
 import { useEffect, useState, useCallback } from "react";
-import { useParams, Link } from "react-router-dom";
+import { useParams, Link, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { Heart, ShoppingBag, Truck, RefreshCcw, ShieldCheck, Star } from "lucide-react";
 import Breadcrumbs from "../components/Breadcrumbs.jsx";
@@ -16,6 +16,8 @@ import { useWishlist } from "../context/WishlistContext.jsx";
 import { useAuth } from "../context/AuthContext.jsx";
 import { useToast } from "../context/ToastContext.jsx";
 import { getErrorMessage } from "../services/api.js";
+import { useStoreConfig } from "../context/StoreConfigContext.jsx";
+import siteConfig from "../config/siteConfig.js";
 import { PackageSearch } from "lucide-react";
 
 const tabs = ["Description", "Ingredients / Info", "How to Use", "Shipping & Returns", "Reviews"];
@@ -37,6 +39,8 @@ export default function ProductDetail() {
   const { isWishlisted, toggle } = useWishlist();
   const { isAuthenticated } = useAuth();
   const { showToast } = useToast();
+  const { freeShippingThreshold } = useStoreConfig();
+  const navigate = useNavigate();
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -92,6 +96,16 @@ export default function ProductDetail() {
     }
   };
 
+  const handleBuyNow = async () => {
+    const res = await addItem(product, qty);
+    if (!res.success) {
+      showToast(res.message || "Could not add item to cart", "error");
+      return;
+    }
+    if (isAuthenticated) navigate("/checkout");
+    else navigate("/login", { state: { from: { pathname: "/checkout" } } });
+  };
+
   const handleWishlist = async () => {
     const res = await toggle(product);
     if (!res.success) showToast(res.message, "info");
@@ -103,6 +117,11 @@ export default function ProductDetail() {
     try {
       const { review } = await submitReview(product._id, reviewForm);
       setReviews((prev) => [review, ...prev]);
+      setProduct((p) => ({
+        ...p,
+        reviewCount: (p.reviewCount || 0) + 1,
+        rating: Math.round((((p.rating || 0) * (p.reviewCount || 0) + review.rating) / ((p.reviewCount || 0) + 1)) * 10) / 10,
+      }));
       setReviewForm({ rating: 5, title: "", comment: "" });
       showToast("Thanks for your review!", "success");
     } catch (err) {
@@ -197,7 +216,7 @@ export default function ProductDetail() {
               <ShoppingBag size={16} /> {outOfStock ? "Out of Stock" : "Add to Cart"}
             </button>
             <button
-              onClick={handleAddToCart}
+              onClick={handleBuyNow}
               disabled={outOfStock}
               className="btn-outline flex-1 disabled:opacity-50"
             >
@@ -214,10 +233,10 @@ export default function ProductDetail() {
 
           <div className="mt-8 grid grid-cols-1 gap-3 rounded-2xl bg-brand-50/70 p-4 sm:grid-cols-3">
             <div className="flex items-center gap-2 text-xs text-ink-700">
-              <Truck size={16} className="text-brand-600" /> Free shipping above ₹999
+              <Truck size={16} className="text-brand-600" /> Free shipping above {formatPrice(freeShippingThreshold)}
             </div>
             <div className="flex items-center gap-2 text-xs text-ink-700">
-              <RefreshCcw size={16} className="text-brand-600" /> Easy returns
+              <RefreshCcw size={16} className="text-brand-600" /> {siteConfig.policies.returnWindowDays}-day returns on unopened items
             </div>
             <div className="flex items-center gap-2 text-xs text-ink-700">
               <ShieldCheck size={16} className="text-brand-600" /> Secure checkout
@@ -282,15 +301,17 @@ export default function ProductDetail() {
           {activeTab === "Shipping & Returns" && (
             <div className="max-w-2xl space-y-3 text-sm text-ink-700">
               <p>
-                Orders are typically processed within 1-2 business days. Free shipping applies on
-                orders above ₹999; a flat shipping fee applies below that. See our{" "}
+                Orders are typically processed within {siteConfig.policies.orderProcessingDays}. Free
+                shipping applies on orders above {formatPrice(freeShippingThreshold)}; a flat shipping
+                fee applies below that. See our{" "}
                 <Link to="/shipping-policy" className="text-brand-700 underline">
                   Shipping Policy
                 </Link>{" "}
                 for full details.
               </p>
               <p>
-                Unopened items can be returned within the window described in our{" "}
+                Unopened items can be returned within {siteConfig.policies.returnWindowDays} days of
+                delivery, as described in our{" "}
                 <Link to="/return-refund-policy" className="text-brand-700 underline">
                   Return &amp; Refund Policy
                 </Link>
@@ -361,7 +382,7 @@ export default function ProductDetail() {
                       <p className="mt-2 text-xs text-ink-500">
                         {r.name}
                         {r.verifiedPurchase && " · Verified Purchase"}
-                        {r.isDemo && " · Demo review"}
+                        {r.isDemo && " · Sample review"}
                       </p>
                     </li>
                   ))}

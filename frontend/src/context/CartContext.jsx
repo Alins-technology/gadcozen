@@ -1,5 +1,6 @@
 import { createContext, useContext, useEffect, useState, useCallback, useRef } from "react";
 import { useAuth } from "./AuthContext";
+import { useStoreConfig } from "./StoreConfigContext";
 import {
   fetchCart,
   addToCartApi,
@@ -24,13 +25,11 @@ const readGuestCart = () => {
 };
 const writeGuestCart = (items) => localStorage.setItem(GUEST_CART_KEY, JSON.stringify(items));
 
-const FREE_SHIPPING_THRESHOLD = 999;
-const STANDARD_SHIPPING = 79;
-
-const summarizeGuestCart = (items) => {
+const summarizeGuestCart = (items, config) => {
   const subtotal = items.reduce((sum, i) => sum + i.product.price * i.quantity, 0);
   const discount = 0;
-  const shippingCost = subtotal === 0 || subtotal >= FREE_SHIPPING_THRESHOLD ? 0 : STANDARD_SHIPPING;
+  const shippingCost =
+    subtotal === 0 || subtotal >= config.freeShippingThreshold ? 0 : config.standardShipping;
   const total = Math.max(subtotal - discount + shippingCost, 0);
   return {
     items: items.map((i) => ({ ...i, lineTotal: i.product.price * i.quantity })),
@@ -44,7 +43,11 @@ const summarizeGuestCart = (items) => {
 
 export const CartProvider = ({ children }) => {
   const { isAuthenticated } = useAuth();
-  const [cart, setCart] = useState(summarizeGuestCart(readGuestCart()));
+  const storeConfig = useStoreConfig();
+  const configRef = useRef(storeConfig);
+  configRef.current = storeConfig;
+  const summarize = useCallback((items) => summarizeGuestCart(items, configRef.current), []);
+  const [cart, setCart] = useState(() => summarizeGuestCart(readGuestCart(), storeConfig));
   const [loading, setLoading] = useState(false);
   const hasMerged = useRef(false);
 
@@ -77,11 +80,16 @@ export const CartProvider = ({ children }) => {
         await refreshServerCart();
       } else {
         hasMerged.current = false;
-        setCart(summarizeGuestCart(readGuestCart()));
+        setCart(summarize(readGuestCart()));
       }
     };
-    run();
-  }, [isAuthenticated, refreshServerCart]);
+    run().catch(() => {});
+  }, [isAuthenticated, refreshServerCart, summarize]);
+
+  // Re-price the guest cart once the real shipping rules arrive from the API.
+  useEffect(() => {
+    if (!isAuthenticated) setCart(summarize(readGuestCart()));
+  }, [storeConfig, isAuthenticated, summarize]);
 
   const addItem = useCallback(
     async (product, quantity = 1) => {
@@ -104,18 +112,24 @@ export const CartProvider = ({ children }) => {
       if (existing) existing.quantity = desiredTotal;
       else items.push({ product, quantity });
       writeGuestCart(items);
-      setCart(summarizeGuestCart(items));
+      setCart(summarize(items));
       return { success: true };
     },
-    [isAuthenticated]
+    [isAuthenticated, summarize]
   );
 
+  // update/remove never throw — they return { success, message } so callers
+  // can show a toast (e.g. "Only 2 left in stock") instead of failing silently.
   const updateItem = useCallback(
     async (productId, quantity) => {
       if (isAuthenticated) {
-        const data = await updateCartItemApi(productId, quantity);
-        setCart(data);
-        return;
+        try {
+          const data = await updateCartItemApi(productId, quantity);
+          setCart(data);
+          return { success: true };
+        } catch (err) {
+          return { success: false, message: getErrorMessage(err) };
+        }
       }
       let items = readGuestCart();
       if (quantity <= 0) {
@@ -125,34 +139,44 @@ export const CartProvider = ({ children }) => {
         if (item) item.quantity = quantity;
       }
       writeGuestCart(items);
-      setCart(summarizeGuestCart(items));
+      setCart(summarize(items));
+      return { success: true };
     },
-    [isAuthenticated]
+    [isAuthenticated, summarize]
   );
 
   const removeItem = useCallback(
     async (productId) => {
       if (isAuthenticated) {
-        const data = await removeCartItemApi(productId);
-        setCart(data);
-        return;
+        try {
+          const data = await removeCartItemApi(productId);
+          setCart(data);
+          return { success: true };
+        } catch (err) {
+          return { success: false, message: getErrorMessage(err) };
+        }
       }
       const items = readGuestCart().filter((i) => i.product._id !== productId);
       writeGuestCart(items);
-      setCart(summarizeGuestCart(items));
+      setCart(summarize(items));
+      return { success: true };
     },
-    [isAuthenticated]
+    [isAuthenticated, summarize]
   );
 
   const clear = useCallback(async () => {
     if (isAuthenticated) {
-      const data = await clearCartApi();
-      setCart(data);
+      try {
+        const data = await clearCartApi();
+        setCart(data);
+      } catch {
+        // non-fatal
+      }
       return;
     }
     writeGuestCart([]);
-    setCart(summarizeGuestCart([]));
-  }, [isAuthenticated]);
+    setCart(summarize([]));
+  }, [isAuthenticated, summarize]);
 
   const applyCoupon = useCallback(
     async (code) => {
@@ -172,8 +196,12 @@ export const CartProvider = ({ children }) => {
 
   const removeCoupon = useCallback(async () => {
     if (!isAuthenticated) return;
-    const data = await removeCouponApi();
-    setCart(data);
+    try {
+      const data = await removeCouponApi();
+      setCart(data);
+    } catch {
+      // non-fatal
+    }
   }, [isAuthenticated]);
 
   return (

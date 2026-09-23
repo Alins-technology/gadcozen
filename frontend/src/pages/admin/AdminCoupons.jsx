@@ -12,7 +12,14 @@ import { useToast } from "../../context/ToastContext.jsx";
 import { getErrorMessage } from "../../services/api.js";
 import PageLoader from "../../components/PageLoader.jsx";
 
-const emptyForm = { code: "", discountPercent: "", minOrderValue: "", expiresAt: "", isActive: true };
+const emptyForm = {
+  code: "",
+  discountPercent: "",
+  minOrderValue: "",
+  expiresAt: "",
+  firstOrderOnly: false,
+  isActive: true,
+};
 
 export default function AdminCoupons() {
   const [coupons, setCoupons] = useState([]);
@@ -56,7 +63,9 @@ export default function AdminCoupons() {
       code: form.code,
       discountPercent: Number(form.discountPercent),
       minOrderValue: form.minOrderValue ? Number(form.minOrderValue) : 0,
-      expiresAt: form.expiresAt || undefined,
+      // Valid until the end of the chosen day (IST); null clears an old expiry.
+      expiresAt: form.expiresAt ? `${form.expiresAt}T23:59:59+05:30` : null,
+      firstOrderOnly: Boolean(form.firstOrderOnly),
       isActive: form.isActive,
     };
     try {
@@ -111,7 +120,14 @@ export default function AdminCoupons() {
           <tbody>
             {coupons.map((c) => (
               <tr key={c._id} className="border-b border-brand-50 last:border-0">
-                <td className="p-3 font-medium text-ink-900">{c.code}</td>
+                <td className="p-3 font-medium text-ink-900">
+                  {c.code}
+                  {c.firstOrderOnly && (
+                    <span className="ml-2 rounded-full bg-brand-50 px-2 py-0.5 text-[10px] text-brand-700">
+                      First order
+                    </span>
+                  )}
+                </td>
                 <td className="p-3 text-ink-700">{c.discountPercent}%</td>
                 <td className="p-3 text-ink-700">₹{c.minOrderValue}</td>
                 <td className="p-3 text-ink-700">{c.expiresAt ? formatDate(c.expiresAt) : "—"}</td>
@@ -185,6 +201,15 @@ export default function AdminCoupons() {
               className="input-field"
             />
           </div>
+          <label className="flex items-center gap-2 text-sm text-ink-700">
+            <input
+              type="checkbox"
+              checked={Boolean(form.firstOrderOnly)}
+              onChange={(e) => setForm((f) => ({ ...f, firstOrderOnly: e.target.checked }))}
+              className="accent-brand-600"
+            />
+            First order only (new customers)
+          </label>
           <label className="flex items-center gap-2 text-sm text-ink-700">
             <input
               type="checkbox"

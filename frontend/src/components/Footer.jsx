@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
-import { Instagram, Facebook, Mail, Phone, ArrowRight } from "lucide-react";
+import { Instagram, Facebook, Mail, Phone, ArrowRight, MapPin } from "lucide-react";
+import siteConfig from "../config/siteConfig.js";
 import Logo from "./Logo.jsx";
 import { useToast } from "../context/ToastContext.jsx";
 import { subscribeToNewsletter } from "../services/subscriberService.js";
@@ -38,6 +39,11 @@ const columns = [
   },
 ];
 
+const socialLinks = [
+  { href: siteConfig.social.instagram, label: "Instagram", Icon: Instagram },
+  { href: siteConfig.social.facebook, label: "Facebook", Icon: Facebook },
+].filter((link) => link.href);
+
 export default function Footer() {
   const [email, setEmail] = useState("");
   const [subscribing, setSubscribing] = useState(false);
@@ -68,33 +74,34 @@ export default function Footer() {
               Simple, effective skincare and personal care essentials designed to fit effortlessly
               into your everyday routine.
             </p>
-            <div className="mt-5 flex items-center gap-3">
-              <a
-                href="https://instagram.com"
-                target="_blank"
-                rel="noreferrer"
-                className="flex h-9 w-9 items-center justify-center rounded-full bg-white text-brand-700 shadow-sm transition hover:bg-brand-600 hover:text-white"
-                aria-label="Instagram"
-              >
-                <Instagram size={16} />
-              </a>
-              <a
-                href="https://facebook.com"
-                target="_blank"
-                rel="noreferrer"
-                className="flex h-9 w-9 items-center justify-center rounded-full bg-white text-brand-700 shadow-sm transition hover:bg-brand-600 hover:text-white"
-                aria-label="Facebook"
-              >
-                <Facebook size={16} />
-              </a>
-            </div>
+            {socialLinks.length > 0 && (
+              <div className="mt-5 flex items-center gap-3">
+                {socialLinks.map(({ href, label, Icon }) => (
+                  <a
+                    key={label}
+                    href={href}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="flex h-9 w-9 items-center justify-center rounded-full bg-white text-brand-700 shadow-sm transition hover:bg-brand-600 hover:text-white"
+                    aria-label={label}
+                  >
+                    <Icon size={16} />
+                  </a>
+                ))}
+              </div>
+            )}
             <div className="mt-4 space-y-1.5 text-sm text-ink-700">
-              <a href="mailto:vamaskinhair@gmail.com" className="flex items-center gap-2 hover:text-brand-700">
-                <Mail size={14} /> vamaskinhair@gmail.com
+              <a href={`mailto:${siteConfig.email}`} className="flex items-center gap-2 hover:text-brand-700">
+                <Mail size={14} /> {siteConfig.email}
               </a>
-              <a href="tel:+919315910949" className="flex items-center gap-2 hover:text-brand-700">
-                <Phone size={14} /> +91 93159 10949
+              <a href={`tel:${siteConfig.phone.replace(/\s/g, "")}`} className="flex items-center gap-2 hover:text-brand-700">
+                <Phone size={14} /> {siteConfig.phone}
               </a>
+              {siteConfig.address && (
+                <p className="flex items-start gap-2">
+                  <MapPin size={14} className="mt-0.5 flex-shrink-0" /> {siteConfig.address}
+                </p>
+              )}
             </div>
           </div>
 
@@ -137,7 +144,11 @@ export default function Footer() {
         </div>
 
         <div className="mt-10 flex flex-col items-center justify-between gap-3 border-t border-brand-100 pt-6 text-xs text-ink-500 sm:flex-row">
-          <p>&copy; {new Date().getFullYear()} GADCO ZEN. All rights reserved.</p>
+          <p>
+            &copy; {new Date().getFullYear()} {siteConfig.legalName || siteConfig.brandName}. All rights
+            reserved.
+            {siteConfig.gstin && <> · GSTIN {siteConfig.gstin}</>}
+          </p>
           <p>
             <Link to="/admin/login" className="underline-offset-2 hover:text-brand-700 hover:underline">
               Admin Login

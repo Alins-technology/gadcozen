@@ -6,6 +6,8 @@ const couponSchema = new mongoose.Schema(
     discountPercent: { type: Number, required: true, min: 1, max: 100 },
     minOrderValue: { type: Number, default: 0 },
     expiresAt: { type: Date },
+    // Only usable by customers who haven't placed a successful order yet.
+    firstOrderOnly: { type: Boolean, default: false },
     isActive: { type: Boolean, default: true },
   },
   { timestamps: true }

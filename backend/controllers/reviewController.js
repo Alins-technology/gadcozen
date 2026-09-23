@@ -21,10 +21,30 @@ export const getProductReviews = asyncHandler(async (req, res) => {
   res.json({ reviews });
 });
 
+// @route GET /api/reviews/featured
+// Recent, real (non-demo) 4-5 star reviews for the homepage.
+export const getFeaturedReviews = asyncHandler(async (req, res) => {
+  const reviews = await Review.find({ isApproved: true, isDemo: false, rating: { $gte: 4 } })
+    .populate("product", "name slug")
+    .sort({ createdAt: -1 })
+    .limit(6);
+  res.json({ reviews: reviews.filter((r) => r.product) });
+});
+
 // @route POST /api/reviews/product/:productId
 export const createReview = asyncHandler(async (req, res) => {
-  const { rating, title, comment } = req.body;
+  const { title, comment } = req.body;
+  const rating = Number(req.body.rating);
   const productId = req.params.productId;
+
+  if (!Number.isInteger(rating) || rating < 1 || rating > 5) {
+    return res.status(400).json({ message: "Rating must be between 1 and 5" });
+  }
+  if (!comment || !String(comment).trim()) {
+    return res.status(400).json({ message: "Please write a short review" });
+  }
+  const product = await Product.findOne({ _id: productId, isActive: true });
+  if (!product) return res.status(404).json({ message: "Product not found" });
 
   const existing = await Review.findOne({ product: productId, user: req.user._id });
   if (existing) {

@@ -16,10 +16,10 @@ export default function Disclaimer() {
       </p>
       <h3 className="font-display text-lg text-ink-900">Patch Testing</h3>
       <p>We recommend patch-testing any new skincare or hair-care product before regular use.</p>
-      <h3 className="font-display text-lg text-ink-900">Demo Content</h3>
+      <h3 className="font-display text-lg text-ink-900">Results May Vary</h3>
       <p>
-        This is a development storefront. Some content, such as customer reviews, may be marked as
-        demo content for showcase purposes and does not represent real customer feedback.
+        Individual results depend on skin and hair type, routine and other factors. Customer
+        reviews reflect personal experiences and are not a guarantee of results.
       </p>
     </LegalLayout>
   );

@@ -3,11 +3,17 @@ import dotenv from "dotenv";
 import cors from "cors";
 import cookieParser from "cookie-parser";
 import morgan from "morgan";
+import helmet from "helmet";
+import rateLimit from "express-rate-limit";
 import path from "path";
 import { fileURLToPath } from "url";
 
 import connectDB from "./config/db.js";
 import { notFound, errorHandler } from "./middleware/errorMiddleware.js";
+import { razorpayWebhook } from "./controllers/orderController.js";
+import { expireStalePendingPayments } from "./services/orderLifecycle.js";
+import { isRazorpayConfigured } from "./config/store.js";
+import { isEmailConfigured } from "./utils/sendEmail.js";
 
 import authRoutes from "./routes/authRoutes.js";
 import userRoutes from "./routes/userRoutes.js";
@@ -23,11 +29,23 @@ import contactRoutes from "./routes/contactRoutes.js";
 import siteContentRoutes from "./routes/siteContentRoutes.js";
 import uploadRoutes from "./routes/uploadRoutes.js";
 import subscriberRoutes from "./routes/subscriberRoutes.js";
+import configRoutes from "./routes/configRoutes.js";
 
 dotenv.config();
 
+const isProduction = process.env.NODE_ENV === "production";
+
+if (!process.env.JWT_SECRET || (isProduction && process.env.JWT_SECRET.length < 32)) {
+  console.error("[server] JWT_SECRET is missing or too short (use at least 32 random characters).");
+  process.exit(1);
+}
+
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const app = express();
+
+// Render/Railway/Heroku etc. sit behind a proxy — needed for correct client
+// IPs in rate limiting and https URLs.
+app.set("trust proxy", 1);
 
 connectDB();
 
@@ -35,18 +53,23 @@ connectDB();
 // Vite silently picks the next free port (5173, 5174, 5175, ...) if the
 // default one is already in use - without this, that port drift breaks the
 // frontend's API calls with a silent CORS error.
-const devPortOrigins = Array.from(
-  { length: 10 },
-  (_, i) => `http://localhost:${5173 + i}`
-);
+const devPortOrigins = isProduction
+  ? []
+  : Array.from({ length: 10 }, (_, i) => `http://localhost:${5173 + i}`);
 // CLIENT_URL may hold a single origin or a comma-separated list (e.g. the
 // apex domain, its www subdomain, and the Vercel preview URL all at once).
 const clientOrigins = (process.env.CLIENT_URL || "")
   .split(",")
-  .map((url) => url.trim())
+  .map((url) => url.trim().replace(/\/$/, ""))
   .filter(Boolean);
 const allowedOrigins = [...clientOrigins, ...devPortOrigins];
 
+app.use(
+  helmet({
+    // Product images in /uploads are loaded by the frontend from another origin.
+    crossOriginResourcePolicy: { policy: "cross-origin" },
+  })
+);
 app.use(
   cors({
     origin: (origin, callback) => {
@@ -57,17 +80,40 @@ app.use(
     credentials: true,
   })
 );
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+
+// Razorpay webhooks are verified against the exact raw bytes, so this route
+// must be registered before express.json() parses the body.
+app.post(
+  "/api/payments/razorpay/webhook",
+  express.raw({ type: "application/json" }),
+  razorpayWebhook
+);
+
+app.use(express.json({ limit: "1mb" }));
+app.use(express.urlencoded({ extended: true, limit: "1mb" }));
 app.use(cookieParser());
 if (process.env.NODE_ENV !== "test") {
-  app.use(morgan("dev"));
+  app.use(morgan(isProduction ? "combined" : "dev"));
 }
+
+const limiter = (max, windowMinutes = 15) =>
+  rateLimit({
+    windowMs: windowMinutes * 60 * 1000,
+    max,
+    standardHeaders: true,
+    legacyHeaders: false,
+    message: { message: "Too many requests, please try again in a few minutes." },
+  });
+
+app.use("/api", limiter(600));
+app.use(["/api/auth/login", "/api/auth/register", "/api/auth/forgot-password", "/api/auth/reset-password"], limiter(20));
+app.use(["/api/contact", "/api/subscribers"], limiter(10));
 
 app.get("/api/health", (req, res) => {
   res.json({ status: "ok", brand: "GADCO ZEN", time: new Date().toISOString() });
 });
 
+app.use("/api/config", configRoutes);
 app.use("/api/auth", authRoutes);
 app.use("/api/users", userRoutes);
 app.use("/api/products", productRoutes);
@@ -84,14 +130,28 @@ app.use("/api/upload", uploadRoutes);
 app.use("/api/subscribers", subscriberRoutes);
 
 // Serve uploaded product images statically
-app.use("/uploads", express.static(path.join(__dirname, "uploads")));
+app.use("/uploads", express.static(path.join(__dirname, "uploads"), { maxAge: "7d" }));
 
 app.use(notFound);
 app.use(errorHandler);
 
+// Unpaid online orders hold stock; release it if payment never completes.
+if (isRazorpayConfigured() && process.env.NODE_ENV !== "test") {
+  setInterval(() => {
+    expireStalePendingPayments().catch((err) =>
+      console.error("[orders] Pending-payment cleanup failed:", err.message)
+    );
+  }, 5 * 60 * 1000).unref();
+}
+
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
   console.log(`[server] GADCO ZEN API running on port ${PORT} (${process.env.NODE_ENV || "development"})`);
+  console.log(
+    `[server] Razorpay: ${isRazorpayConfigured() ? "configured" : "NOT configured"} · Email: ${
+      isEmailConfigured() ? "configured" : "NOT configured (emails are logged only)"
+    }`
+  );
 });
 
 export default app;
