@@ -7,6 +7,7 @@ import { getErrorMessage } from "../../services/api.js";
 import { useToast } from "../../context/ToastContext.jsx";
 import PageLoader from "../../components/PageLoader.jsx";
 import { imgProps } from "../../utils/image.js";
+import InvoiceButton, { hasInvoice } from "../../components/InvoiceButton.jsx";
 
 const statuses = ["Pending", "Confirmed", "Processing", "Shipped", "Delivered", "Cancelled"];
 
@@ -17,6 +18,19 @@ export default function AdminOrderDetail() {
   const [updating, setUpdating] = useState(false);
   const [tracking, setTracking] = useState({ courierName: "", trackingNumber: "", trackingUrl: "" });
   const { showToast } = useToast();
+
+  // Orders ship via Shiprocket: default the courier name and build the public
+  // tracking link from the AWB number when no link was entered.
+  const withTrackingLink = (t) => {
+    const awb = t.trackingNumber.trim();
+    const isShiprocket = !t.courierName.trim() || /shiprocket/i.test(t.courierName);
+    return {
+      ...t,
+      courierName: t.courierName.trim() || (awb ? "Shiprocket" : ""),
+      trackingUrl:
+        t.trackingUrl.trim() || (awb && isShiprocket ? `https://shiprocket.co/tracking/${encodeURIComponent(awb)}` : ""),
+    };
+  };
 
   useEffect(() => {
     document.title = "Order Details | GADCO ZEN Admin";
@@ -43,7 +57,7 @@ export default function AdminOrderDetail() {
     }
     setUpdating(true);
     try {
-      const { order: updated } = await updateOrderStatusAdmin(id, { orderStatus: newStatus, ...tracking });
+      const { order: updated } = await updateOrderStatusAdmin(id, { orderStatus: newStatus, ...withTrackingLink(tracking) });
       setOrder(updated);
       showToast(`Order marked as ${newStatus}`, "success");
     } catch (err) {
@@ -57,8 +71,10 @@ export default function AdminOrderDetail() {
     e.preventDefault();
     setUpdating(true);
     try {
-      const { order: updated } = await updateOrderStatusAdmin(id, tracking);
+      const payload = withTrackingLink(tracking);
+      const { order: updated } = await updateOrderStatusAdmin(id, payload);
       setOrder(updated);
+      setTracking(payload);
       showToast("Tracking details saved", "success");
     } catch (err) {
       showToast(getErrorMessage(err), "error");
@@ -80,7 +96,12 @@ export default function AdminOrderDetail() {
         <div>
           <h1 className="font-display text-2xl text-ink-900">{order.orderNumber}</h1>
           <p className="text-sm text-ink-500">Placed on {formatDate(order.createdAt)}</p>
+          {order.invoiceNumber && <p className="text-xs text-ink-500">Invoice {order.invoiceNumber}</p>}
         </div>
+        <div className="flex flex-wrap items-center gap-3">
+          {hasInvoice(order) && (
+            <InvoiceButton url={`/orders/${order._id}/invoice`} fileName={`Invoice-${order.orderNumber}.pdf`} />
+          )}
         <select
           value={order.orderStatus}
           disabled={updating}
@@ -93,6 +114,7 @@ export default function AdminOrderDetail() {
             </option>
           ))}
         </select>
+        </div>
       </div>
 
       <div className="mt-6 grid gap-6 lg:grid-cols-[1fr_320px]">
@@ -184,7 +206,7 @@ export default function AdminOrderDetail() {
             </p>
             <div className="mt-3 space-y-2">
               <input
-                placeholder="Courier (e.g. Delhivery)"
+                placeholder="Courier (default: Shiprocket)"
                 value={tracking.courierName}
                 onChange={(e) => setTracking((t) => ({ ...t, courierName: e.target.value }))}
                 className="input-field"
@@ -197,7 +219,7 @@ export default function AdminOrderDetail() {
               />
               <input
                 type="url"
-                placeholder="Tracking link (optional)"
+                placeholder="Tracking link (auto-filled for Shiprocket)"
                 value={tracking.trackingUrl}
                 onChange={(e) => setTracking((t) => ({ ...t, trackingUrl: e.target.value }))}
                 className="input-field"

@@ -54,6 +54,7 @@ export const orderConfirmationEmail = (order) => ({
     "Thank you for your order!",
     `<p style="font-size:14px">Your order <strong>${order.orderNumber}</strong> has been confirmed. Payment: ${paymentLabel(order)}.</p>
      ${orderTable(order)}
+     ${order.invoiceNumber ? `<p style="font-size:14px;margin-top:16px">Your invoice <strong>${escapeHtml(order.invoiceNumber)}</strong> is attached to this email as a PDF.</p>` : ""}
      <p style="font-size:14px;margin-top:16px"><strong>Shipping to</strong><br/>${addressBlock(order.shippingAddress)}</p>
      <p style="margin-top:20px"><a href="${clientUrl()}/account/orders/${order.orderNumber}" style="background:#037D8F;color:#fff;padding:10px 18px;border-radius:999px;text-decoration:none;font-size:14px">View your order</a></p>`
   ),

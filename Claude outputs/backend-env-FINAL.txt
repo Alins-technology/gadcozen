@@ -1,0 +1,60 @@
+# =====================================================================
+# GADCO ZEN - backend/.env  (ye poori file copy karke backend\.env mein
+# purana sab hata ke paste karo, phir Ctrl+S)
+# Jo line khaali (=) hai wo optional hai ya baad mein bharni hai.
+# =====================================================================
+
+# ---------- Server ----------
+PORT=5000
+NODE_ENV=development
+
+# ---------- Database + Login ----------
+MONGO_URI=mongodb+srv://kritika098jain_db_user:Ugm3tFztmpz73L3@cluster0.uemh6vz.mongodb.net/gadcozen
+JWT_SECRET=5e252affaaedd162d31951183d766179db2985af216c3d5dd53ae78a2063e92eda8bc5ca083cff8aa718a5730e8990c1
+JWT_EXPIRES_IN=7d
+
+# ---------- Website URL (live hone pe real domain daalna) ----------
+CLIENT_URL=http://localhost:5173
+PUBLIC_API_URL=
+
+# ---------- Admin login (live se pehle password badalna) ----------
+ADMIN_EMAIL=admin@gadcozen.com
+ADMIN_PASSWORD=Admin@12345
+DEMO_CUSTOMER_EMAIL=customer@gadcozen.com
+DEMO_CUSTOMER_PASSWORD=Customer@12345
+
+# ---------- Shipping + COD ----------
+FREE_SHIPPING_THRESHOLD=999
+STANDARD_SHIPPING_FEE=79
+COD_ENABLED=true
+COD_FEE=99
+PENDING_PAYMENT_TTL_MINUTES=30
+
+# ---------- Razorpay (abhi TEST keys; live pe rzp_live_ wali daalni hain) ----------
+RAZORPAY_KEY_ID=rzp_test_TgZUGRENfOy2LP
+RAZORPAY_KEY_SECRET=iGuGpb63lWZ6OSzgnRnrxi1s
+RAZORPAY_WEBHOOK_SECRET=
+
+# ---------- Email (Gmail app password daalte hi emails + invoice jaane lagenge) ----------
+SMTP_HOST=smtp.gmail.com
+SMTP_PORT=587
+SMTP_USER=vamaskinhair@gmail.com
+SMTP_PASS=
+EMAIL_FROM="GADCO ZEN <vamaskinhair@gmail.com>"
+ADMIN_NOTIFY_EMAIL=vamaskinhair@gmail.com
+
+# ---------- Invoice pe chhapne wali business details (client se lena) ----------
+BUSINESS_BRAND_NAME="GADCO ZEN"
+BUSINESS_LEGAL_NAME="Vamah Advanced Hair And Skin LLP"
+BUSINESS_ADDRESS=
+BUSINESS_STATE=
+BUSINESS_GSTIN=
+BUSINESS_EMAIL=vamaskinhair@gmail.com
+BUSINESS_PHONE="+91 93159 10949"
+GST_RATE_PERCENT=18
+INVOICE_HSN_CODE=
+INVOICE_PREFIX=GZ
+
+# ---------- Images (live server ke liye Cloudinary; abhi optional) ----------
+CLOUDINARY_URL=
+CLOUDINARY_FOLDER=gadco-zen/products

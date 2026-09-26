@@ -133,7 +133,8 @@ export default function Checkout() {
         order_id: razorpay.orderId,
         name: "GADCO ZEN",
         description: `Order ${order.orderNumber}`,
-        image: "/images/brand/logo.png",
+        // Razorpay renders on its own domain, so the logo needs a full URL.
+        image: `${window.location.origin}/images/brand/logo.png`,
         prefill: {
           name: shipping.fullName,
           email: contact.email,

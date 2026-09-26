@@ -14,6 +14,8 @@ export default function ShippingPolicy() {
       <p>
         This Shipping Policy explains how {siteConfig.brandName} (operated by {operator}) processes
         and delivers orders placed through this website. We currently ship within India only.
+        {policies.shippingPartner &&
+          ` All orders are shipped through ${policies.shippingPartner} and its trusted courier partners.`}
       </p>
       <h3 className="font-display text-lg text-ink-900">Processing Time</h3>
       <p>
@@ -38,7 +40,10 @@ export default function ShippingPolicy() {
       <h3 className="font-display text-lg text-ink-900">Order Tracking</h3>
       <p>
         Track your order anytime from the Orders section of your account. Courier and tracking
-        numbers are added there as soon as your parcel is handed over.
+        numbers are added there as soon as your parcel is handed over
+        {policies.shippingPartner
+          ? `, and you can also track it live on ${policies.shippingPartner} using the tracking (AWB) number in your shipping email.`
+          : "."}
       </p>
       <h3 className="font-display text-lg text-ink-900">Damaged or Missing Parcels</h3>
       <p>

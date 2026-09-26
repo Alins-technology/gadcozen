@@ -7,6 +7,7 @@ import PageLoader from "../../components/PageLoader.jsx";
 import EmptyState from "../../components/EmptyState.jsx";
 import { PackageSearch } from "lucide-react";
 import { imgProps } from "../../utils/image.js";
+import InvoiceButton, { hasInvoice } from "../../components/InvoiceButton.jsx";
 
 const statusSteps = ["Pending", "Confirmed", "Processing", "Shipped", "Delivered"];
 
@@ -40,9 +41,17 @@ export default function OrderDetail() {
           <h3 className="font-display text-lg text-ink-900">Order {order.orderNumber}</h3>
           <p className="text-xs text-ink-500">Placed on {formatDate(order.createdAt)}</p>
         </div>
-        <Link to="/account/orders" className="text-sm text-brand-700 hover:underline">
-          &larr; Back to orders
-        </Link>
+        <div className="flex flex-wrap items-center gap-3">
+          {hasInvoice(order) && (
+            <InvoiceButton
+              url={`/orders/mine/${encodeURIComponent(order.orderNumber)}/invoice`}
+              fileName={`Invoice-${order.orderNumber}.pdf`}
+            />
+          )}
+          <Link to="/account/orders" className="text-sm text-brand-700 hover:underline">
+            &larr; Back to orders
+          </Link>
+        </div>
       </div>
 
       {!isCancelled ? (

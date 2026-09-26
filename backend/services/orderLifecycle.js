@@ -9,6 +9,7 @@ import {
 } from "../utils/emailTemplates.js";
 import { PENDING_PAYMENT_TTL_MINUTES } from "../config/store.js";
 import { fetchRazorpayOrderPayments, refundRazorpayPayment } from "./razorpayService.js";
+import { ensureInvoiceNumber, buildInvoicePdf, invoiceFileName } from "./invoiceService.js";
 
 // Atomically takes stock for every item. Each decrement only succeeds if
 // enough stock is left at that instant, so two customers can't both buy the
@@ -82,10 +83,25 @@ export const onOrderConfirmed = async (order) => {
 
   await removeOrderedItemsFromCart(order);
 
+  // Assign the invoice number and build the PDF. A failure here must never
+  // block the order, so the emails still go out (just without the attachment).
+  let attachments;
+  try {
+    const invoiced = await ensureInvoiceNumber(order);
+    if (invoiced) {
+      order.invoiceNumber = invoiced.invoiceNumber;
+      order.invoiceDate = invoiced.invoiceDate;
+    }
+    const pdf = await buildInvoicePdf(order);
+    attachments = [{ filename: invoiceFileName(order), content: pdf, contentType: "application/pdf" }];
+  } catch (err) {
+    console.error(`[invoice] Could not create invoice for ${order.orderNumber}: ${err.message}`);
+  }
+
   const customerMail = orderConfirmationEmail(order);
-  sendEmail({ to: order.contactEmail, ...customerMail });
+  sendEmail({ to: order.contactEmail, ...customerMail, attachments });
   if (process.env.ADMIN_NOTIFY_EMAIL) {
-    sendEmail({ to: process.env.ADMIN_NOTIFY_EMAIL, ...adminNewOrderEmail(order) });
+    sendEmail({ to: process.env.ADMIN_NOTIFY_EMAIL, ...adminNewOrderEmail(order), attachments });
   }
 };
 

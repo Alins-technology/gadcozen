@@ -59,6 +59,9 @@ const orderSchema = new mongoose.Schema(
       default: "Pending",
     },
     notes: { type: String },
+    // Sequential GST invoice number, assigned once the order is confirmed/paid.
+    invoiceNumber: { type: String },
+    invoiceDate: { type: Date },
     courierName: { type: String },
     trackingNumber: { type: String },
     trackingUrl: { type: String },
@@ -74,6 +77,7 @@ const orderSchema = new mongoose.Schema(
 );
 
 orderSchema.index({ user: 1 });
+orderSchema.index({ invoiceNumber: 1 }, { unique: true, sparse: true });
 orderSchema.index({ "paymentInfo.razorpayOrderId": 1 }, { sparse: true });
 orderSchema.index({ paymentMethod: 1, paymentStatus: 1, orderStatus: 1, createdAt: 1 });
 // orderNumber already has a unique index via `unique: true` above — no need to declare it again here.

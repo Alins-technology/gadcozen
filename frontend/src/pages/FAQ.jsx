@@ -36,7 +36,7 @@ const faqData = [
     items: [
       {
         q: "What is your return policy?",
-        a: "See our Return & Refund Policy page for the current return window and conditions.",
+        a: "Unopened, unused products in their original sealed packaging can be returned within 7 days of delivery. Damaged, defective or wrong items must be reported within 48 hours with photos or an unboxing video. We arrange the return pickup through Shiprocket. See our Return & Refund Policy for full details.",
       },
     ],
   },

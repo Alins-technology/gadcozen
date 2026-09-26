@@ -22,6 +22,12 @@ import {
   fetchRazorpayOrderPayments,
   refundRazorpayPayment,
 } from "../services/razorpayService.js";
+import {
+  ensureInvoiceNumber,
+  buildInvoicePdf,
+  invoiceFileName,
+  isInvoiceable,
+} from "../services/invoiceService.js";
 
 const ORDER_STATUSES = ["Pending", "Confirmed", "Processing", "Shipped", "Delivered", "Cancelled"];
 
@@ -229,6 +235,34 @@ export const getMyOrderByNumber = asyncHandler(async (req, res) => {
   const order = await Order.findOne({ orderNumber: req.params.orderNumber, user: req.user._id });
   if (!order) return res.status(404).json({ message: "Order not found" });
   res.json({ order });
+});
+
+const sendInvoice = async (order, res) => {
+  if (!isInvoiceable(order)) {
+    return res.status(400).json({ message: "The invoice is available once the order is confirmed." });
+  }
+  const invoiced = await ensureInvoiceNumber(order);
+  const pdf = await buildInvoicePdf(invoiced);
+  res.set({
+    "Content-Type": "application/pdf",
+    "Content-Disposition": `attachment; filename="${invoiceFileName(invoiced)}"`,
+    "Cache-Control": "private, no-store",
+  });
+  res.send(pdf);
+};
+
+// @route GET /api/orders/mine/:orderNumber/invoice
+export const getMyInvoice = asyncHandler(async (req, res) => {
+  const order = await Order.findOne({ orderNumber: req.params.orderNumber, user: req.user._id });
+  if (!order) return res.status(404).json({ message: "Order not found" });
+  return sendInvoice(order, res);
+});
+
+// @route GET /api/orders/:id/invoice (admin)
+export const getInvoiceAdmin = asyncHandler(async (req, res) => {
+  const order = await Order.findById(req.params.id);
+  if (!order) return res.status(404).json({ message: "Order not found" });
+  return sendInvoice(order, res);
 });
 
 // ---- Admin ----

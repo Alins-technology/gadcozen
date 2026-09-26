@@ -9,6 +9,8 @@ import {
   getAllOrders,
   getOrderById,
   updateOrderStatus,
+  getMyInvoice,
+  getInvoiceAdmin,
 } from "../controllers/orderController.js";
 import { protect, admin } from "../middleware/authMiddleware.js";
 import { validate } from "../middleware/validateMiddleware.js";
@@ -43,9 +45,11 @@ router.post("/:id/verify-payment", verifyPayment);
 router.post("/:id/payment-cancelled", paymentCancelled);
 router.get("/mine", getMyOrders);
 router.get("/mine/:orderNumber", getMyOrderByNumber);
+router.get("/mine/:orderNumber/invoice", getMyInvoice);
 
 router.get("/", admin, getAllOrders);
 router.get("/:id", admin, getOrderById);
+router.get("/:id/invoice", admin, getInvoiceAdmin);
 router.put("/:id/status", admin, updateOrderStatus);
 
 export default router;

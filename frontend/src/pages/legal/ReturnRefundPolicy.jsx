@@ -41,7 +41,10 @@ export default function ReturnRefundPolicy() {
       <h3 className="font-display text-lg text-ink-900">How to Request a Return</h3>
       <p>
         Email {siteConfig.email} with your order number, the item(s) you want to return and the
-        reason. We&apos;ll confirm eligibility and share pickup or return-shipping instructions.
+        reason within {policies.returnWindowDays} days of delivery. Once we confirm eligibility, we
+        {policies.shippingPartner
+          ? ` schedule a reverse pickup from your address through ${policies.shippingPartner}.`
+          : " share pickup or return-shipping instructions."}
       </p>
 
       <h3 className="font-display text-lg text-ink-900">Refunds</h3>
