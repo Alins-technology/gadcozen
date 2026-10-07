@@ -9,6 +9,7 @@ const defaultConfig = {
   codFee: 0,
   paymentMethods: ["cod"],
   razorpayKeyId: null,
+  bulkDiscountPercent: 20,
   loaded: false,
 };
 

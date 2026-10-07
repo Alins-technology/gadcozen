@@ -43,7 +43,10 @@ export const getProducts = asyncHandler(async (req, res) => {
   if (newArrival === "true") query.newArrival = true;
 
   const sortMap = {
-    featured: { featured: -1, createdAt: -1 },
+    // Featured first, then in the order products were added — so the core
+    // GADCO ZEN range stays on top and later additions (e.g. Medical
+    // Supplies) follow in their catalogue order.
+    featured: { featured: -1, createdAt: 1, _id: 1 },
     "price-asc": { price: 1 },
     "price-desc": { price: -1 },
     newest: { createdAt: -1 },

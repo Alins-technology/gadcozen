@@ -24,6 +24,7 @@ const Account = lazy(() => import("./pages/account/Account.jsx"));
 const About = lazy(() => import("./pages/About.jsx"));
 const Contact = lazy(() => import("./pages/Contact.jsx"));
 const FAQ = lazy(() => import("./pages/FAQ.jsx"));
+const BulkOrders = lazy(() => import("./pages/BulkOrders.jsx"));
 const NotFound = lazy(() => import("./pages/NotFound.jsx"));
 
 const ShippingPolicy = lazy(() => import("./pages/legal/ShippingPolicy.jsx"));
@@ -43,6 +44,7 @@ const AdminUsers = lazy(() => import("./pages/admin/AdminUsers.jsx"));
 const AdminReviews = lazy(() => import("./pages/admin/AdminReviews.jsx"));
 const AdminCoupons = lazy(() => import("./pages/admin/AdminCoupons.jsx"));
 const AdminContacts = lazy(() => import("./pages/admin/AdminContacts.jsx"));
+const AdminBulkEnquiries = lazy(() => import("./pages/admin/AdminBulkEnquiries.jsx"));
 const AdminSubscribers = lazy(() => import("./pages/admin/AdminSubscribers.jsx"));
 const AdminLogin = lazy(() => import("./pages/admin/AdminLogin.jsx"));
 
@@ -93,6 +95,7 @@ function App() {
               <Route path="/about" element={<About />} />
               <Route path="/contact" element={<Contact />} />
               <Route path="/faq" element={<FAQ />} />
+              <Route path="/bulk-orders" element={<BulkOrders />} />
               <Route path="/shipping-policy" element={<ShippingPolicy />} />
               <Route path="/return-refund-policy" element={<ReturnRefundPolicy />} />
               <Route path="/privacy-policy" element={<PrivacyPolicy />} />
@@ -122,6 +125,7 @@ function App() {
               <Route path="users" element={<AdminUsers />} />
               <Route path="reviews" element={<AdminReviews />} />
               <Route path="contacts" element={<AdminContacts />} />
+              <Route path="bulk-enquiries" element={<AdminBulkEnquiries />} />
               <Route path="subscribers" element={<AdminSubscribers />} />
             </Route>
           </Routes>

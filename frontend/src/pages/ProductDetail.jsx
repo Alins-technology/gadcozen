@@ -1,14 +1,14 @@
 import { useEffect, useState, useCallback } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { Heart, ShoppingBag, Truck, RefreshCcw, ShieldCheck, Star } from "lucide-react";
+import { Heart, ShoppingBag, Truck, RefreshCcw, ShieldCheck, Star, Building2, ArrowRight } from "lucide-react";
 import Breadcrumbs from "../components/Breadcrumbs.jsx";
 import QuantitySelector from "../components/QuantitySelector.jsx";
 import RatingStars from "../components/RatingStars.jsx";
 import ProductGrid from "../components/ProductGrid.jsx";
 import PageLoader from "../components/PageLoader.jsx";
 import EmptyState from "../components/EmptyState.jsx";
-import { formatPrice, formatDate } from "../utils/format.js";
+import { formatPrice, formatDate, bulkPrice } from "../utils/format.js";
 import { fetchProductBySlug, fetchRelatedProducts } from "../services/productService.js";
 import { fetchProductReviews, submitReview } from "../services/reviewService.js";
 import { useCart } from "../context/CartContext.jsx";
@@ -23,6 +23,7 @@ import { imageUrl } from "../utils/image.js";
 import { PackageSearch } from "lucide-react";
 import { imgProps } from "../utils/image.js";
 
+const MEDICAL_CATEGORY_SLUG = "medical-supplies";
 const tabs = ["Description", "Ingredients / Info", "How to Use", "Shipping & Returns", "Reviews"];
 
 export default function ProductDetail() {
@@ -42,7 +43,7 @@ export default function ProductDetail() {
   const { isWishlisted, toggle } = useWishlist();
   const { isAuthenticated } = useAuth();
   const { showToast } = useToast();
-  const { freeShippingThreshold } = useStoreConfig();
+  const { freeShippingThreshold, bulkDiscountPercent } = useStoreConfig();
   const navigate = useNavigate();
 
   useSeo(buildProductSeo(product, notFound));
@@ -90,6 +91,8 @@ export default function ProductDetail() {
 
   const outOfStock = product.stock <= 0;
   const wishlisted = isWishlisted(product._id);
+  const isMedical = product.category?.slug === MEDICAL_CATEGORY_SLUG;
+  const tabLabel = (tab) => (tab === "Ingredients / Info" && isMedical ? "Specifications" : tab);
 
   const handleAddToCart = async () => {
     const res = await addItem(product, qty);
@@ -247,6 +250,30 @@ export default function ProductDetail() {
               <ShieldCheck size={16} className="text-brand-600" /> Secure checkout
             </div>
           </div>
+
+          <Link
+            to={`/bulk-orders?product=${product._id}`}
+            className="group mt-4 flex items-center gap-3 rounded-2xl border border-brand-200 bg-white p-4 transition hover:border-brand-400 hover:shadow-soft"
+          >
+            <span className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-brand-600 text-white">
+              <Building2 size={18} />
+            </span>
+            <span className="flex-1">
+              <span className="block text-sm font-semibold text-ink-900">
+                {isMedical ? "Buying for a clinic or hospital?" : "Need this in bulk?"}
+              </span>
+              <span className="block text-xs text-ink-500">
+                Bulk price{" "}
+                <span className="font-semibold text-brand-700">
+                  {formatPrice(bulkPrice(product.price, bulkDiscountPercent))}
+                </span>{" "}
+                / pack ({bulkDiscountPercent}% off) — {siteConfig.bulkOrders.minimumOrderNote.toLowerCase()}.
+              </span>
+            </span>
+            <span className="flex items-center gap-1 text-xs font-semibold text-brand-700">
+              Get a Quote <ArrowRight size={14} className="transition group-hover:translate-x-0.5" />
+            </span>
+          </Link>
         </div>
       </div>
 
@@ -261,7 +288,7 @@ export default function ProductDetail() {
                 activeTab === tab ? "text-brand-700" : "text-ink-500 hover:text-ink-900"
               }`}
             >
-              {tab}
+              {tabLabel(tab)}
               {activeTab === tab && (
                 <motion.span
                   layoutId="tab-underline"
@@ -290,8 +317,8 @@ export default function ProductDetail() {
                 </div>
               ) : (
                 <p className="text-sm text-ink-500">
-                  Detailed ingredient information for this product is not listed. See the product
-                  packaging for full ingredient details.
+                  Detailed {isMedical ? "specifications are" : "ingredient information is"} not listed
+                  for this product. See the product packaging for full details.
                 </p>
               )}
             </div>
@@ -299,6 +326,9 @@ export default function ProductDetail() {
 
           {activeTab === "How to Use" && (
             <p className="max-w-2xl text-sm leading-relaxed text-ink-700">
+              {isMedical && (
+                <span className="mb-2 block font-semibold text-ink-900">Usage &amp; safety</span>
+              )}
               {product.howToUse || "Usage instructions will be added soon."}
             </p>
           )}

@@ -13,6 +13,7 @@ import connectDB from "./config/db.js";
 import { notFound, errorHandler } from "./middleware/errorMiddleware.js";
 import { razorpayWebhook } from "./controllers/orderController.js";
 import { expireStalePendingPayments } from "./services/orderLifecycle.js";
+import { ensureMedicalSupplies } from "./services/ensureMedicalSupplies.js";
 import { isRazorpayConfigured } from "./config/store.js";
 import { isEmailConfigured } from "./utils/sendEmail.js";
 
@@ -31,6 +32,7 @@ import siteContentRoutes from "./routes/siteContentRoutes.js";
 import uploadRoutes from "./routes/uploadRoutes.js";
 import subscriberRoutes from "./routes/subscriberRoutes.js";
 import configRoutes from "./routes/configRoutes.js";
+import bulkEnquiryRoutes from "./routes/bulkEnquiryRoutes.js";
 
 dotenv.config();
 
@@ -49,6 +51,8 @@ const app = express();
 app.set("trust proxy", 1);
 
 connectDB();
+// Adds the Medical Supplies category/products if they are missing (insert-only).
+ensureMedicalSupplies();
 
 // Allow the configured CLIENT_URL plus a range of localhost dev ports, since
 // Vite silently picks the next free port (5173, 5174, 5175, ...) if the
@@ -110,6 +114,8 @@ const limiter = (max, windowMinutes = 15) =>
 app.use("/api", limiter(600));
 app.use(["/api/auth/login", "/api/auth/register", "/api/auth/forgot-password", "/api/auth/reset-password"], limiter(20));
 app.use(["/api/contact", "/api/subscribers"], limiter(10));
+// Only throttle public quote submissions, not the admin list/update calls.
+app.post("/api/bulk-enquiries", limiter(10));
 
 app.get("/api/health", (req, res) => {
   res.json({ status: "ok", brand: "GADCO ZEN", time: new Date().toISOString() });
@@ -140,6 +146,7 @@ app.use("/api/contact", contactRoutes);
 app.use("/api/site-content", siteContentRoutes);
 app.use("/api/upload", uploadRoutes);
 app.use("/api/subscribers", subscriberRoutes);
+app.use("/api/bulk-enquiries", bulkEnquiryRoutes);
 
 // Serve uploaded product images statically
 app.use("/uploads", express.static(path.join(__dirname, "uploads"), { maxAge: "7d" }));

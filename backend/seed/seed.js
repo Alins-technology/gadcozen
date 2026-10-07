@@ -1,6 +1,9 @@
-// Seeds the database with an admin user, a demo customer, 4 categories,
-// and 8 GADCO ZEN products (7 active + "Body Moisturizing Cream" kept
-// inactive until its real photo/content is supplied).
+// Seeds the database with an admin user, a demo customer, 5 categories,
+// 8 GADCO ZEN products (7 active + "Body Moisturizing Cream" kept inactive
+// until its real photo/content is supplied) and 5 Medical Supplies products.
+//
+// LIVE store? Don't run this — use `npm run seed:medical` instead, which only
+// adds the Medical Supplies range without deleting anything.
 //
 // Usage:
 //   npm run seed            populate the database
@@ -21,6 +24,8 @@ import Wishlist from "../models/Wishlist.js";
 import Review from "../models/Review.js";
 import Order from "../models/Order.js";
 import Coupon from "../models/Coupon.js";
+import BulkEnquiry from "../models/BulkEnquiry.js";
+import { medicalCategory, medicalProducts } from "./medicalSuppliesData.js";
 
 dotenv.config();
 
@@ -45,6 +50,7 @@ const categoriesData = [
     description: "Lightweight, non-comedogenic SPF 50 protection for daily wear.",
     image: "/images/products/SPF50-sunscreen/spf-50-sunscreen-gel.png",
   },
+  medicalCategory,
 ];
 
 // name -> category name, keeps the mapping explicit and easy to audit
@@ -337,6 +343,8 @@ const productsData = [
     isActive: false,
     tags: ["body cream", "moisturizer", "body care"],
   },
+  // --- Medical Supplies (syringes, caps, masks) — see medicalSuppliesData.js
+  ...medicalProducts.map((p) => ({ ...p, categoryName: medicalCategory.name })),
 ];
 
 const demoReviews = [
@@ -371,6 +379,7 @@ const run = async () => {
       Review.deleteMany({}),
       Order.deleteMany({}),
       Coupon.deleteMany({}),
+      BulkEnquiry.deleteMany({}),
     ]);
     console.log("[seed] All collections cleared.");
     process.exit(0);

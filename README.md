@@ -267,3 +267,29 @@ rebuild.
 8. **Seeding** — `npm run seed` refuses to run when `NODE_ENV=production` (it would delete real
    reviews and re-create products). Seed once on an empty database with `--force`, then manage
    everything from the admin panel.
+
+## 18. Medical Supplies & Bulk Orders
+
+- **Powered by Vama Clinic** — parent brand link (`https://vamaclinics.com/`) lives in
+  `siteConfig.poweredBy` and shows in the footer, home hero, About page and mobile menu.
+- **Medical Supplies category** — 5 products (Hi-Tech 1 ml insulin syringe, Hi-Tech 2 ml syringe,
+  AI-DISPO 10 ml syringe, disposable surgical caps, JCM 3-ply masks). Data lives in
+  `backend/seed/medicalSuppliesData.js`; photos in `frontend/public/images/products/<slug>/`.
+  Prices are **placeholders** — confirm them in Admin → Products.
+- **Auto-added on start-up:** when the backend starts it creates the Medical Supplies category and
+  any missing medical products (insert-only, never overwrites admin edits). Just restart / redeploy
+  the backend. Turn off with `AUTO_ADD_MEDICAL_SUPPLIES=false`.
+- **Bulk discount:** flat `BULK_DISCOUNT_PERCENT` (default **20%**) off each product's selling
+  price. Shown on `/bulk-orders` (per-product bulk price + estimated total), on every product page,
+  and saved with each enquiry (unit price, bulk price, estimated total) in Admin and in the emails.
+- **Or add them manually (same result):**
+  ```bash
+  cd backend && npm run seed:medical
+  ```
+  (Matches products by SKU; safe to re-run. Never run plain `npm run seed` on production.)
+- **Bulk Orders page** — `/bulk-orders`: pick products + number of packs, send a quote request.
+  Requests are saved (`BulkEnquiry` model, `POST /api/bulk-enquiries`), emailed to
+  `ADMIN_NOTIFY_EMAIL`, acknowledged to the customer, and managed in **Admin → Bulk Enquiries**
+  (status New → Contacted → Quoted → Converted/Closed, internal notes, email/WhatsApp reply).
+  Every product page also has a "Need this in bulk? Get a Quote" link that pre-selects the product.
+  Phone/WhatsApp/minimum-order text: `siteConfig.bulkOrders`.

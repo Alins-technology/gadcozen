@@ -1,7 +1,9 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
-import { ShieldCheck, Sparkles, Truck, HeadphonesIcon, ArrowRight } from "lucide-react";
+import { ShieldCheck, Sparkles, Truck, HeadphonesIcon, ArrowRight, Stethoscope, Building2, PackageCheck, BadgePercent } from "lucide-react";
+import siteConfig from "../config/siteConfig.js";
+import { useStoreConfig } from "../context/StoreConfigContext.jsx";
 import SectionHeading from "../components/SectionHeading.jsx";
 import ProductGrid from "../components/ProductGrid.jsx";
 import CategoryCard from "../components/CategoryCard.jsx";
@@ -32,6 +34,7 @@ export default function Home() {
       },
     },
   });
+  const { bulkDiscountPercent } = useStoreConfig();
   const [featured, setFeatured] = useState([]);
   const [bestsellers, setBestsellers] = useState([]);
   const [categories, setCategories] = useState([]);
@@ -90,10 +93,21 @@ export default function Home() {
               <Link to="/shop" className="btn-primary">
                 Shop Now <ArrowRight size={16} />
               </Link>
-              <Link to="/shop" className="btn-outline">
-                Explore Products
+              <Link to="/bulk-orders" className="btn-outline">
+                Bulk Orders for Clinics
               </Link>
             </div>
+            <a
+              href={siteConfig.poweredBy.url}
+              target="_blank"
+              rel="noreferrer"
+              className="mt-6 inline-flex items-center gap-2 rounded-full bg-white/80 px-4 py-2 text-xs text-ink-700 shadow-soft ring-1 ring-brand-100 transition hover:ring-brand-300"
+            >
+              <span className="flex h-6 w-6 items-center justify-center rounded-full bg-brand-600 text-white">
+                <Stethoscope size={13} />
+              </span>
+              Powered by <span className="font-semibold text-brand-700">{siteConfig.poweredBy.name}</span>
+            </a>
           </motion.div>
 
           <motion.div
@@ -181,9 +195,9 @@ export default function Home() {
         <SectionHeading
           eyebrow="Browse"
           title="Shop by Category"
-          description="Four simple categories built around your everyday routine."
+          description="Everyday skincare and personal care, plus medical supplies for clinics."
         />
-        <div className="mt-10 grid grid-cols-2 gap-5 sm:grid-cols-4">
+        <div className="mt-10 grid grid-cols-2 gap-5 sm:grid-cols-3 lg:grid-cols-5">
           {categories.map((cat, i) => (
             <CategoryCard key={cat._id} category={cat} index={i} />
           ))}
@@ -268,6 +282,64 @@ export default function Home() {
             </li>
           </ul>
         </div>
+      </section>
+
+      {/* BULK ORDERS FOR CLINICS */}
+      <section className="container-app pb-4">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.5 }}
+          className="grid items-center gap-8 overflow-hidden rounded-3xl border border-brand-100 bg-gradient-to-br from-brand-50 via-white to-brand-50 p-6 sm:p-10 lg:grid-cols-[1.2fr_1fr]"
+        >
+          <div>
+            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-brand-600">
+              For Clinics, Hospitals &amp; Pharmacies
+            </p>
+            <h2 className="mt-2 font-display text-3xl text-ink-900 sm:text-4xl">
+              Buy in bulk. Save more.
+            </h2>
+            <p className="mt-3 max-w-lg text-sm text-ink-700">
+              Syringes, surgical caps, face masks and our skincare range — at a flat {bulkDiscountPercent}% off
+              retail price on bulk orders. Tell us what you need and we&apos;ll send a quote{" "}
+              {siteConfig.bulkOrders.responseTime}.
+            </p>
+            <ul className="mt-5 grid gap-2 text-sm text-ink-700 sm:grid-cols-3">
+              {[
+                [BadgePercent, `Flat ${bulkDiscountPercent}% off`],
+                [PackageCheck, "GST invoice"],
+                [Building2, "Pan-India delivery"],
+              ].map(([Icon, label]) => (
+                <li key={label} className="flex items-center gap-2">
+                  <Icon size={16} className="text-brand-600" /> {label}
+                </li>
+              ))}
+            </ul>
+            <div className="mt-6 flex flex-wrap gap-3">
+              <Link to="/bulk-orders" className="btn-primary">
+                Get a Bulk Quote <ArrowRight size={16} />
+              </Link>
+              <Link to="/category/medical-supplies" className="btn-outline">
+                Medical Supplies
+              </Link>
+            </div>
+          </div>
+          <div className="grid grid-cols-3 gap-3">
+            {[
+              "/images/products/insulin-syringe-1ml/insulin-syringe-1ml.png",
+              "/images/products/disposable-surgical-cap/disposable-surgical-cap.png",
+              "/images/products/jcm-3-ply-face-mask/jcm-3-ply-face-mask.png",
+            ].map((src, i) => (
+              <div
+                key={src}
+                className={`overflow-hidden rounded-2xl border-4 border-white shadow-card ${i === 1 ? "translate-y-4" : ""}`}
+              >
+                <img {...imgProps(src, 600)} loading="lazy" alt="" className="aspect-square w-full object-cover" />
+              </div>
+            ))}
+          </div>
+        </motion.div>
       </section>
 
       {/* BESTSELLERS */}

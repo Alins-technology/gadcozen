@@ -27,14 +27,14 @@ const fromAddress = () =>
   process.env.EMAIL_FROM || `GADCO ZEN <${process.env.SMTP_USER || "no-reply@gadcozen.com"}>`;
 
 // Never throws — a failed email must not fail the order/request that triggered it.
-export const sendEmail = async ({ to, subject, html, text, attachments }) => {
+export const sendEmail = async ({ to, subject, html, text, attachments, replyTo }) => {
   if (!to) return false;
   if (!isEmailConfigured()) {
     console.log(`[email] SMTP not configured — would send "${subject}" to ${to}`);
     return false;
   }
   try {
-    await getTransporter().sendMail({ from: fromAddress(), to, subject, html, text, attachments });
+    await getTransporter().sendMail({ from: fromAddress(), to, subject, html, text, attachments, replyTo });
     return true;
   } catch (err) {
     console.error(`[email] Failed to send "${subject}" to ${to}: ${err.message}`);

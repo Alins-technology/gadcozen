@@ -8,7 +8,7 @@ import { useLocation } from "react-router-dom";
 const SITE_NAME = "GADCO ZEN";
 const DEFAULT_TITLE = "GADCO ZEN | Skincare That Feels As Good As It Looks";
 const DEFAULT_DESCRIPTION =
-  "GADCO ZEN — simple, effective skincare and personal care essentials: face washes, sunscreens, hair care and body care. Free shipping above ₹999.";
+  "GADCO ZEN by Vama Clinic — skincare, hair care, body care and medical supplies (syringes, caps, masks) with bulk orders for clinics. Free shipping above ₹999.";
 const DEFAULT_IMAGE = "/images/products/fusion-sunscreen/fusion-sunscreen-1200.webp";
 
 // Prefer the configured production URL so canonicals never point at a

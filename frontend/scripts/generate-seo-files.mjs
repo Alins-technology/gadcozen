@@ -41,6 +41,7 @@ if (!siteUrl) {
 const staticPages = [
   ["/", "1.0", "daily"],
   ["/shop", "0.9", "daily"],
+  ["/bulk-orders", "0.8", "weekly"],
   ["/about", "0.5", "monthly"],
   ["/contact", "0.5", "monthly"],
   ["/faq", "0.5", "monthly"],

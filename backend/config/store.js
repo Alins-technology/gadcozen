@@ -26,6 +26,11 @@ export const isMockPaymentAllowed = () =>
 // How long an unpaid online order holds its stock before it's auto-cancelled.
 export const PENDING_PAYMENT_TTL_MINUTES = num(process.env.PENDING_PAYMENT_TTL_MINUTES, 30);
 
+// Flat discount on bulk orders (quote requests from /bulk-orders), applied to
+// each product's current selling price.
+export const BULK_DISCOUNT_PERCENT = Math.min(Math.max(num(process.env.BULK_DISCOUNT_PERCENT, 20), 0), 90);
+export const bulkUnitPrice = (price) => Math.round(Number(price || 0) * (1 - BULK_DISCOUNT_PERCENT / 100));
+
 export const calculateShipping = (subtotalAfterDiscount) =>
   subtotalAfterDiscount <= 0 || subtotalAfterDiscount >= FREE_SHIPPING_THRESHOLD ? 0 : STANDARD_SHIPPING;
 
@@ -43,4 +48,5 @@ export const getPublicStoreConfig = () => ({
   codFee: COD_ENABLED ? COD_FEE : 0,
   paymentMethods: getEnabledPaymentMethods(),
   razorpayKeyId: isRazorpayConfigured() ? process.env.RAZORPAY_KEY_ID : null,
+  bulkDiscountPercent: BULK_DISCOUNT_PERCENT,
 });

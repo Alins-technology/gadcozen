@@ -3,6 +3,7 @@ import { Link, NavLink, useNavigate } from "react-router-dom";
 import { Menu, Search, User, Heart, ShoppingBag, X } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
 import Logo from "./Logo.jsx";
+import siteConfig from "../config/siteConfig.js";
 import SearchOverlay from "./SearchOverlay.jsx";
 import CartDrawer from "./CartDrawer.jsx";
 import { useAuth } from "../context/AuthContext.jsx";
@@ -12,6 +13,8 @@ import { useWishlist } from "../context/WishlistContext.jsx";
 const navLinks = [
   { to: "/", label: "Home", end: true },
   { to: "/shop", label: "Shop" },
+  { to: "/category/medical-supplies", label: "Medical Supplies" },
+  { to: "/bulk-orders", label: "Bulk Orders" },
   { to: "/about", label: "About Us" },
   { to: "/contact", label: "Contact" },
 ];
@@ -53,7 +56,7 @@ export default function Navbar() {
 
           <Logo />
 
-          <nav className="hidden items-center gap-8 lg:flex">
+          <nav className="hidden items-center gap-6 lg:flex xl:gap-8">
             {navLinks.map((link) => (
               <NavLink
                 key={link.to}
@@ -194,6 +197,15 @@ export default function Navbar() {
                   {isAuthenticated ? "My Account" : "Login / Register"}
                 </NavLink>
               </nav>
+              <a
+                href={siteConfig.poweredBy.url}
+                target="_blank"
+                rel="noreferrer"
+                className="mt-auto rounded-xl bg-brand-50 px-3 py-3 text-xs text-ink-500"
+              >
+                Powered by{" "}
+                <span className="font-semibold text-brand-700">{siteConfig.poweredBy.name}</span>
+              </a>
             </motion.div>
           </div>
         )}

@@ -7,6 +7,24 @@
 const siteConfig = {
   brandName: "GADCO ZEN",
 
+  // Parent brand — shown as "Powered by Vama Clinic" in the header, footer,
+  // home and about pages.
+  poweredBy: {
+    name: "Vama Clinic",
+    url: "https://vamaclinics.com/",
+  },
+
+  // Bulk / B2B orders (clinics, hospitals, pharmacies) — /bulk-orders page.
+  bulkOrders: {
+    // Shown on the page; quotes are sent manually by the team.
+    // TODO(client): confirm the minimum order and response time.
+    minimumOrderNote: "Bulk pricing starts from 10 packs per product",
+    responseTime: "within 1 business day",
+    phone: "+91 93159 10949",
+    // WhatsApp number in international format, digits only ("" hides the button)
+    whatsapp: "919315910949",
+  },
+
   legalName: "Vamah Advanced Hair And Skin LLP",
   address: "48B 48A, Kaushalpuri Colony, Chinhat, Chhota Bharwara, Lucknow, Uttar Pradesh - 226010",
   gstin: "09AAYFV3346C1ZQ",

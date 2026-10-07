@@ -14,6 +14,7 @@ import {
   Tag,
   Mail,
   Send,
+  Building2,
 } from "lucide-react";
 import Logo from "../components/Logo.jsx";
 import { useAuth } from "../context/AuthContext.jsx";
@@ -26,6 +27,7 @@ const links = [
   { to: "/admin/coupons", label: "Coupons", icon: Tag },
   { to: "/admin/users", label: "Users", icon: Users },
   { to: "/admin/reviews", label: "Reviews", icon: Star },
+  { to: "/admin/bulk-enquiries", label: "Bulk Enquiries", icon: Building2 },
   { to: "/admin/contacts", label: "Contact Messages", icon: Mail },
   { to: "/admin/subscribers", label: "Subscribers", icon: Send },
 ];

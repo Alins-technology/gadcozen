@@ -30,9 +30,9 @@ export default function Shop() {
   const sort = searchParams.get("sort") || "featured";
 
   useSeo({
-    title: "Shop Skincare, Hair Care & Body Care",
+    title: "Shop Skincare, Hair Care, Body Care & Medical Supplies",
     description:
-      "Shop all GADCO ZEN products — foaming face washes, SPF 50 sunscreens, hair growth shampoo, hair mask and body lotion. Free shipping above ₹999.",
+      "Shop all GADCO ZEN products — foaming face washes, SPF 50 sunscreens, hair care, body lotion, syringes, surgical caps and face masks. Free shipping above ₹999.",
     noindex: Boolean(search),
   });
 

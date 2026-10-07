@@ -110,3 +110,56 @@ export const contactNotificationEmail = (s) => ({
      <p style="font-size:14px;white-space:pre-wrap">${escapeHtml(s.message)}</p>`
   ),
 });
+
+const bulkItemsTable = (e) => `
+<table style="width:100%;border-collapse:collapse;font-size:14px">
+  <tr>
+    <th style="text-align:left;padding:6px 0;border-bottom:1px solid #e2e8f0">Product</th>
+    <th style="text-align:right;padding:6px 0;border-bottom:1px solid #e2e8f0">Packs</th>
+    <th style="text-align:right;padding:6px 0;border-bottom:1px solid #e2e8f0">Bulk price / pack</th>
+  </tr>
+  ${e.items
+    .map(
+      (i) => `<tr>
+        <td style="padding:8px 0;border-bottom:1px solid #f1f5f9">${escapeHtml(i.productName)}</td>
+        <td style="padding:8px 0;border-bottom:1px solid #f1f5f9;text-align:right">${Number(i.quantity).toLocaleString("en-IN")}</td>
+        <td style="padding:8px 0;border-bottom:1px solid #f1f5f9;text-align:right">${
+          i.bulkUnitPrice != null
+            ? `${inr(i.bulkUnitPrice)} <span style="color:#94a3b8;text-decoration:line-through">${inr(i.unitPrice)}</span>`
+            : "On quote"
+        }</td>
+      </tr>`
+    )
+    .join("")}
+  ${
+    e.estimatedTotal > 0
+      ? `<tr><td colspan="2" style="padding:6px 0">Retail value</td><td style="text-align:right;color:#94a3b8;text-decoration:line-through">${inr(e.retailTotal)}</td></tr>
+         <tr><td colspan="2" style="padding:6px 0;font-weight:bold">Estimated bulk total (${e.discountPercent}% off)</td><td style="text-align:right;font-weight:bold">${inr(e.estimatedTotal)}</td></tr>`
+      : ""
+  }
+</table>
+<p style="font-size:12px;color:#64748b">Estimate excludes shipping; final amount is confirmed in the quote.</p>`;
+
+export const bulkEnquiryAdminEmail = (e) => ({
+  subject: `Bulk order enquiry — ${e.organization || e.name}${e.city ? ` (${e.city})` : ""}`,
+  html: layout(
+    "New bulk order / quote request",
+    `<p style="font-size:14px">
+       <strong>${escapeHtml(e.name)}</strong>${e.organization ? ` · ${escapeHtml(e.organization)}` : ""}${e.businessType ? ` · ${escapeHtml(e.businessType)}` : ""}<br/>
+       ${escapeHtml(e.email)} · ${escapeHtml(e.phone)}${e.city ? `<br/>${escapeHtml(e.city)}` : ""}${e.gstin ? `<br/>GSTIN: ${escapeHtml(e.gstin)}` : ""}
+     </p>
+     ${bulkItemsTable(e)}
+     ${e.message ? `<p style="font-size:14px;white-space:pre-wrap;margin-top:16px">${escapeHtml(e.message)}</p>` : ""}
+     <p style="margin-top:16px"><a href="${clientUrl()}/admin/bulk-enquiries" style="color:#037D8F">Open in admin panel</a></p>`
+  ),
+});
+
+export const bulkEnquiryAckEmail = (e) => ({
+  subject: "We've received your bulk order enquiry — GADCO ZEN",
+  html: layout(
+    `Thanks, ${e.name}!`,
+    `<p style="font-size:14px">We've received your bulk order request and our team will get back to you with a quote within 1 business day.</p>
+     ${bulkItemsTable(e)}
+     <p style="font-size:13px;color:#64748b;margin-top:16px">GADCO ZEN is powered by Vama Clinic.</p>`
+  ),
+});

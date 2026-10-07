@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
-import { Instagram, Facebook, Mail, Phone, ArrowRight, MapPin } from "lucide-react";
+import { Instagram, Facebook, Mail, Phone, ArrowRight, MapPin, Stethoscope, ExternalLink } from "lucide-react";
 import siteConfig from "../config/siteConfig.js";
 import Logo from "./Logo.jsx";
 import { useToast } from "../context/ToastContext.jsx";
@@ -16,12 +16,14 @@ const columns = [
       { label: "Sun Care", to: "/category/sun-care" },
       { label: "Hair Care", to: "/category/hair-care" },
       { label: "Body Care", to: "/category/body-care" },
+      { label: "Medical Supplies", to: "/category/medical-supplies" },
     ],
   },
   {
     title: "Customer Care",
     links: [
       { label: "Contact Us", to: "/contact" },
+      { label: "Bulk Orders", to: "/bulk-orders" },
       { label: "Shipping Policy", to: "/shipping-policy" },
       { label: "Returns & Refunds", to: "/return-refund-policy" },
       { label: "FAQs", to: "/faq" },
@@ -71,9 +73,19 @@ export default function Footer() {
           <div className="lg:col-span-2">
             <Logo />
             <p className="mt-4 max-w-xs text-sm text-ink-700">
-              Simple, effective skincare and personal care essentials designed to fit effortlessly
-              into your everyday routine.
+              Simple, effective skincare and personal care essentials, plus everyday medical
+              supplies for clinics — available per pack or in bulk.
             </p>
+            <a
+              href={siteConfig.poweredBy.url}
+              target="_blank"
+              rel="noreferrer"
+              className="mt-4 inline-flex items-center gap-2 rounded-full border border-brand-200 bg-white px-3.5 py-1.5 text-xs text-ink-700 shadow-sm transition hover:border-brand-400"
+            >
+              <Stethoscope size={14} className="text-brand-600" />
+              Powered by <span className="font-semibold text-brand-700">{siteConfig.poweredBy.name}</span>
+              <ExternalLink size={12} className="text-ink-500" />
+            </a>
             {socialLinks.length > 0 && (
               <div className="mt-5 flex items-center gap-3">
                 {socialLinks.map(({ href, label, Icon }) => (
@@ -148,6 +160,15 @@ export default function Footer() {
             &copy; {new Date().getFullYear()} {siteConfig.legalName || siteConfig.brandName}. All rights
             reserved.
             {siteConfig.gstin && <> · GSTIN {siteConfig.gstin}</>}
+            {" · "}Powered by{" "}
+            <a
+              href={siteConfig.poweredBy.url}
+              target="_blank"
+              rel="noreferrer"
+              className="font-medium text-brand-700 hover:underline"
+            >
+              {siteConfig.poweredBy.name}
+            </a>
           </p>
           <p>
             <Link to="/admin/login" className="underline-offset-2 hover:text-brand-700 hover:underline">
